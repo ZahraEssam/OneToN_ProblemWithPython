@@ -1,0 +1,1302 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>1 to N من 1 لحد N</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Rakkas&family=Mada:wght@400;500;600;700;800&family=DM+Mono:wght@500&display=swap" rel="stylesheet">
+<style>
+:root{
+  --bg1:#e6f6f1; --bg2:#f7fcf9; --card:#ffffff; --ink:#173a40; --muted:#5f7f84; --line:#d5ebe5;
+  --pond:#2bb3a3; --deep:#157a83; --lily:#5cc46b; --lilyd:#3c9a4c; --lotus:#ff7aa8; --sun:#ffd35c; --frog:#7ed957; --coral:#ff6b5e; --purple:#7b6cf6;
+  --code:#12343a; --code2:#1a4249;
+  --mono:'DM Mono',monospace; --disp:'Rakkas','Mada',serif;
+  --s:min(1vh,.56vw); --s:min(1dvh,.56vw);
+  --gap:calc(var(--s)*1.8); --r:calc(var(--s)*2.4);
+  --shadow:0 calc(var(--s)*.8) calc(var(--s)*2.6) rgba(23,58,64,.10);
+}
+*{box-sizing:border-box;margin:0;padding:0}
+html,body{height:100%}
+body{font-family:'Mada',sans-serif;color:var(--ink);overflow:hidden;font-size:calc(var(--s)*2.2);background:radial-gradient(ellipse at 85% -10%,rgba(255,211,92,.35),transparent 45%),linear-gradient(180deg,var(--bg1),var(--bg2))}
+button{font:inherit;color:inherit}
+.ltr{direction:ltr;unicode-bidi:isolate;font-family:var(--mono)}
+.app{height:100vh;height:100dvh;display:grid;grid-template-rows:auto 1fr auto}
+
+.top{display:flex;align-items:center;justify-content:space-between;gap:calc(var(--s)*2);padding:calc(var(--s)*1) calc(var(--s)*3);background:var(--deep);color:#fff;position:relative;z-index:5}
+.top::after{content:"";position:absolute;left:0;right:0;bottom:-10px;height:10px;background:radial-gradient(circle at 10px 0,var(--deep) 9px,transparent 10px) 0 0/20px 10px repeat-x}
+.brand{display:flex;align-items:center;gap:calc(var(--s)*1.4)}
+.logo{width:calc(var(--s)*5.6);height:calc(var(--s)*5.6);border-radius:50%;background:#fff;display:grid;place-items:center;flex:none}
+.logo svg{width:72%;height:72%}
+.brand b{display:block;font-family:var(--disp);font-weight:400;font-size:calc(var(--s)*3);line-height:1.2}
+.brand b .en{font-family:var(--mono);font-size:.72em;color:var(--sun);margin-inline-end:8px}
+.brand span{font-size:calc(var(--s)*1.6);opacity:.75;font-family:var(--mono)}
+.stepper{display:flex;gap:calc(var(--s)*.4);background:rgba(255,255,255,.1);border-radius:999px;padding:calc(var(--s)*.5)}
+.step-btn{display:flex;align-items:center;gap:calc(var(--s)*.7);border:0;background:transparent;border-radius:999px;padding:calc(var(--s)*.4) calc(var(--s)*1.4) calc(var(--s)*.4) calc(var(--s)*.5);cursor:pointer;font-weight:700;font-size:calc(var(--s)*1.9);color:rgba(255,255,255,.75);transition:.25s}
+.step-btn i{font-style:normal;width:calc(var(--s)*3.2);height:calc(var(--s)*3.2);border-radius:50%;display:grid;place-items:center;border:2px solid rgba(255,255,255,.45);font-family:var(--mono);font-size:calc(var(--s)*1.7)}
+.step-btn.done i{background:var(--lily);border-color:var(--lily)}
+.step-btn.active{background:#fff;color:var(--deep)}
+.step-btn.active i{background:var(--lotus);border-color:var(--lotus);color:#fff}
+@media(max-width:1100px){.step-btn span{display:none}.step-btn{padding:calc(var(--s)*.4)}}
+
+.stage{position:relative;overflow:hidden;overflow:clip}
+.screen{position:absolute;inset:0;padding:calc(var(--s)*2.6) calc(var(--s)*3.5) calc(var(--s)*2);overflow:auto;display:flex;flex-direction:column;gap:var(--gap);opacity:0;visibility:hidden;transform:translateY(14px);transition:opacity .5s cubic-bezier(.22,1,.36,1),transform .5s cubic-bezier(.22,1,.36,1),visibility .5s}
+.screen.active{opacity:1;visibility:visible;transform:none}
+.screen>*{width:100%}
+.screen-head{display:flex;align-items:center;justify-content:space-between;gap:calc(var(--s)*1.6);flex-wrap:wrap;flex:none}
+.screen-head>div:first-child{display:flex;align-items:center;gap:calc(var(--s)*1.6)}
+.kicker{font-family:var(--disp);font-size:calc(var(--s)*2);color:#fff;padding:0 calc(var(--s)*1.8);background:var(--lily);border-radius:50% 50% 50% 50% / 60% 60% 40% 40%;white-space:nowrap;line-height:1.7}
+.screen-head h2{font-family:var(--disp);font-weight:400;font-size:calc(var(--s)*3.8);line-height:1.3}
+.screen-head h2 .hl{color:var(--deep)}
+.screen-head p{color:var(--muted);font-size:calc(var(--s)*2.1);font-weight:600}
+.split{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:var(--gap);flex:1;min-height:0}
+.split>*{min-height:0}
+.card{background:var(--card);border:1px solid var(--line);border-radius:var(--r);padding:calc(var(--s)*2);box-shadow:var(--shadow);position:relative}
+.label{font-size:calc(var(--s)*1.8);font-weight:700;color:var(--muted);margin-bottom:calc(var(--s)*.6);display:block}
+
+.btn{font-weight:800;font-size:calc(var(--s)*2.1);border:2px solid var(--ink);border-radius:999px;padding:calc(var(--s)*.75) calc(var(--s)*2.4);cursor:pointer;display:inline-flex;align-items:center;justify-content:center;gap:calc(var(--s)*.9);white-space:nowrap;background:#fff;transition:transform .2s cubic-bezier(.3,1.5,.5,1),box-shadow .2s,background .2s,opacity .2s}
+.btn svg{width:calc(var(--s)*2.4);height:calc(var(--s)*2.4);flex:none}
+.btn:hover{transform:translateY(-2px);box-shadow:0 5px 12px rgba(23,58,64,.15)}
+.btn:active{transform:translateY(1px) scale(.97)}
+.btn.deep{background:var(--deep);border-color:var(--deep);color:#fff}
+.btn.lily{background:var(--lily);border-color:var(--lilyd);color:#fff}
+.btn.lotus{background:var(--lotus);border-color:#e0578a;color:#fff}
+.btn.icon{padding-inline:calc(var(--s)*1.2)}
+.btn:disabled{opacity:.35;cursor:not-allowed;transform:none;box-shadow:none}
+.btn.pulse{animation:pulse 1.4s ease-in-out infinite}
+@keyframes pulse{0%,100%{box-shadow:0 0 0 0 rgba(21,122,131,.5)}50%{box-shadow:0 0 0 12px rgba(21,122,131,0)}}
+.chips{display:flex;gap:calc(var(--s)*.8);flex-wrap:wrap;align-items:center}
+.chip{font-family:var(--mono);font-size:calc(var(--s)*1.95);padding:calc(var(--s)*.25) calc(var(--s)*1.4);border-radius:999px;border:1.5px solid var(--line);background:#fff;cursor:pointer;direction:ltr;transition:.2s}
+.chip:hover{border-color:var(--deep)}
+.chip.active{border:2px solid var(--deep);background:#dff5ef;color:var(--deep)}
+.chip:disabled{opacity:.4;cursor:default}
+.controls{display:flex;gap:calc(var(--s)*1);flex-wrap:wrap;align-items:center}
+.sndbtn.off .w{display:none}.sndbtn .x{display:none}.sndbtn.off .x{display:inline}
+
+.dock{display:flex;align-items:center;gap:calc(var(--s)*1.6);background:#fff;border:1px solid var(--line);border-radius:var(--r);padding:calc(var(--s)*.8) calc(var(--s)*1.6);flex:none;flex-wrap:wrap;box-shadow:var(--shadow)}
+.dock .txt{flex:1;min-width:200px;font-weight:600;font-size:calc(var(--s)*2.3);line-height:1.6}
+.dock .txt b{color:var(--deep)}
+.av{width:calc(var(--s)*6.2);height:calc(var(--s)*6.2);border-radius:50%;background:#dff5ef;overflow:hidden;flex:none;border:2px solid var(--lily)}
+.av svg{width:100%;height:100%;display:block}
+
+/* frog */
+.frog{flex:1 1 0;min-height:0;width:100%;--happy:0;--oops:0;filter:drop-shadow(0 14px 14px rgba(23,58,64,.2))}
+.frog.happy{--happy:1}.frog.oops{--oops:1}
+.frog .bodyg{transform-box:view-box;transform-origin:120px 226px;animation:breathe 3s ease-in-out infinite}
+@keyframes breathe{0%,100%{transform:scale(1,1)}50%{transform:scale(1.015,.985)}}
+.frog .throat{transform-box:fill-box;transform-origin:center top;animation:throat 2.4s ease-in-out infinite}
+@keyframes throat{0%,80%,100%{transform:scale(1)}88%{transform:scale(1.25,1.35)}}
+.frog .blink, .av .blink{transform-box:fill-box;transform-origin:center;animation:blink 4s infinite}
+@keyframes blink{0%,93%,100%{transform:scaleY(1)}95.5%{transform:scaleY(.1)}}
+
+/* ===== pond ===== */
+.pond{position:relative;width:100%;height:100%;overflow:hidden;border-radius:calc(var(--s)*1.8);background:
+  radial-gradient(ellipse at 20% 30%,rgba(255,255,255,.22) 0 8%,transparent 9%),
+  radial-gradient(ellipse at 70% 70%,rgba(255,255,255,.14) 0 6%,transparent 7%),
+  linear-gradient(180deg,#5fd0c2,var(--pond) 45%,var(--deep))}
+.pond .wave{position:absolute;left:0;right:0;height:2px;background:repeating-linear-gradient(90deg,rgba(255,255,255,.35) 0 18px,transparent 18px 46px);animation:wave 6s linear infinite}
+@keyframes wave{to{background-position:184px 0}}
+.pad{position:absolute;bottom:18%;transform:translateX(-50%);display:flex;flex-direction:column;align-items:center;pointer-events:none}
+.pad svg{width:100%;display:block;overflow:visible}
+.pad .num{position:absolute;bottom:-.1em;left:50%;transform:translate(-50%,0);font-family:var(--mono);font-weight:500;color:#fff;text-shadow:0 1px 2px rgba(0,0,0,.35);white-space:nowrap}
+.pad .fl{transform-box:fill-box;transform-origin:50% 90%;transform:scale(0);transition:transform .45s cubic-bezier(.3,1.6,.5,1)}
+.pad.bloom .fl{transform:scale(1)}
+.pad.here .leaf{fill:#7ad987}
+.pad.shore .num{color:var(--sun)}
+.frogm{position:absolute;left:0;bottom:0;pointer-events:none;will-change:transform;z-index:3}
+.frogm svg{width:100%;height:100%;display:block;overflow:visible;transform-origin:50% 100%}
+.ripple{position:absolute;border:2px solid rgba(255,255,255,.7);border-radius:50%;pointer-events:none}
+
+/* ===== 1. game ===== */
+.story{flex:1;min-height:0;display:grid;grid-template-columns:minmax(0,.66fr) minmax(0,1.34fr);gap:var(--gap)}
+.story>*{min-height:0}
+.hero{display:flex;flex-direction:column;align-items:center;justify-content:center;min-height:0}
+.bubble{background:#fff;border:2px solid var(--deep);border-radius:calc(var(--s)*2.4);padding:calc(var(--s)*1.2) calc(var(--s)*2.4);font-weight:700;font-size:calc(var(--s)*2.3);line-height:1.6;max-width:calc(var(--s)*52);text-align:center;position:relative;margin-bottom:calc(var(--s)*2.4);flex:none;box-shadow:0 6px 0 rgba(21,122,131,.15)}
+.bubble::after{content:"";position:absolute;bottom:calc(var(--s)*-1.25);left:50%;width:calc(var(--s)*2.2);height:calc(var(--s)*2.2);background:#fff;border-right:2px solid var(--deep);border-bottom:2px solid var(--deep);transform:translateX(-50%) rotate(45deg)}
+.bubble b{color:var(--deep)} .bubble .lt{color:#e0578a}
+.bubble.pop{animation:bpop .45s cubic-bezier(.22,1,.36,1)}
+@keyframes bpop{0%{transform:scale(.92)}60%{transform:scale(1.04)}100%{transform:scale(1)}}
+.park{display:flex;flex-direction:column;gap:calc(var(--s)*1.2)}
+.park-top{display:flex;align-items:center;justify-content:space-between;gap:calc(var(--s)*1.2);flex-wrap:wrap}
+.park-title{font-family:var(--disp);font-size:calc(var(--s)*2.6)}
+.pondbox{flex:1 1 0;min-height:calc(var(--s)*14)}
+.loopzone{display:grid;grid-template-columns:minmax(0,1.1fr) minmax(0,.9fr);gap:calc(var(--s)*1.4);flex:none}
+.parts3{display:flex;flex-direction:column;gap:calc(var(--s)*.6)}
+.lp{display:flex;align-items:center;gap:calc(var(--s)*1);padding:calc(var(--s)*.45) calc(var(--s)*1.2);border-radius:calc(var(--s)*1.2);border:1.5px solid var(--line);background:#fafdfc;font-weight:700;font-size:calc(var(--s)*1.95);transition:background .25s,border-color .25s,transform .25s}
+.lp i{font-style:normal;width:calc(var(--s)*3);height:calc(var(--s)*3);border-radius:50%;display:grid;place-items:center;background:var(--line);color:var(--muted);font-family:var(--mono);font-size:calc(var(--s)*1.6);flex:none;transition:.25s}
+.lp code{margin-inline-start:auto;font-family:var(--mono);direction:ltr;unicode-bidi:isolate;color:var(--deep);font-size:.95em}
+.lp.on{background:#fff7d6;border-color:#e8b928;transform:translateX(-4px)}
+.lp.on i{background:var(--sun);color:var(--ink)}
+.lp.ok code{color:var(--lilyd)} .lp.no code{color:var(--coral)}
+.lp.stop{background:#ffe9e6;border-color:var(--coral)}
+.lp.stop i{background:var(--coral);color:#fff}
+.side{display:flex;flex-direction:column;gap:calc(var(--s)*.8);min-width:0}
+.cnt{display:flex;align-items:center;justify-content:space-between;gap:calc(var(--s)*1);background:var(--code);color:#e6fbf6;border-radius:calc(var(--s)*1.2);padding:calc(var(--s)*.4) calc(var(--s)*1.4);font-family:var(--mono);font-size:calc(var(--s)*2.3);direction:ltr}
+.cnt b{color:var(--sun);font-weight:500;font-size:1.25em}
+.out{flex:1;min-height:calc(var(--s)*9);background:var(--code);border-radius:calc(var(--s)*1.2);padding:calc(var(--s)*.6) calc(var(--s)*1.4);direction:ltr;font-family:var(--mono);color:#e6fbf6;font-size:calc(var(--s)*2);line-height:1.25;display:flex;flex-direction:column;justify-content:flex-end;overflow:hidden;position:relative}
+.out .more{position:absolute;top:calc(var(--s)*.4);right:calc(var(--s)*1);font-size:.75em;color:#7fb4ad}
+.out .l{animation:lin .3s ease-out}
+.out .l.new{color:var(--sun)}
+@keyframes lin{from{opacity:0;transform:translateY(8px)}}
+.gbtns{display:flex;gap:calc(var(--s)*1);justify-content:center;flex-wrap:wrap;flex:none}
+
+/* ===== 2. analysis ===== */
+.an-grid{flex:1;min-height:0;display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);grid-template-rows:minmax(0,1fr) minmax(0,1fr);gap:var(--gap)}
+.an{display:flex;flex-direction:column;gap:calc(var(--s)*.8);overflow:hidden;padding:calc(var(--s)*1.5) calc(var(--s)*2.2);transition:box-shadow .4s}
+.an-top{display:flex;align-items:center;gap:calc(var(--s)*1.3);flex:none}
+.an-ic{width:calc(var(--s)*5);height:calc(var(--s)*5);border-radius:50%;display:grid;place-items:center;flex:none;color:#fff}
+.an-ic svg{width:52%;height:52%}
+.an-top h3{font-family:var(--disp);font-weight:400;font-size:calc(var(--s)*3)}
+.an-top .num{margin-inline-start:auto;font-family:var(--mono);font-size:calc(var(--s)*2);color:#bcd8d1}
+.an-body{flex:1;min-height:0;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:calc(var(--s)*1);text-align:center;transition:opacity .45s,transform .45s cubic-bezier(.22,1,.36,1)}
+.an.locked .an-body{opacity:0;transform:translateY(14px);pointer-events:none}
+.an .q{position:absolute;inset:0;display:grid;place-items:center;font-family:var(--mono);font-size:calc(var(--s)*13);color:rgba(23,58,64,.05);transition:opacity .4s;pointer-events:none}
+.an:not(.locked) .q{opacity:0}
+.an.locked .an-top{opacity:.5}
+.an.fresh{box-shadow:0 0 0 3px var(--lily),var(--shadow)}
+.an small{color:var(--muted);font-weight:600;font-size:calc(var(--s)*2)}
+.bign{display:flex;align-items:center;gap:calc(var(--s)*1.4);direction:ltr;font-family:var(--mono)}
+.bign b{font-weight:500;font-size:calc(var(--s)*5);background:var(--deep);color:#fff;border-radius:calc(var(--s)*1.2);padding:0 calc(var(--s)*2.4);line-height:1.4}
+.bign span{font-size:calc(var(--s)*2.6);color:var(--muted)}
+.colout{display:flex;gap:calc(var(--s)*2);align-items:center}
+.colout .o{background:var(--code);color:#e6fbf6;font-family:var(--mono);border-radius:calc(var(--s)*1);padding:calc(var(--s)*.5) calc(var(--s)*2.2);font-size:calc(var(--s)*2.1);line-height:1.25;direction:ltr;text-align:left}
+.many{font-family:var(--mono);direction:ltr;text-align:left;background:var(--code);color:#e6fbf6;border-radius:calc(var(--s)*1);padding:calc(var(--s)*.6) calc(var(--s)*2);font-size:calc(var(--s)*2);line-height:1.35;-webkit-mask:linear-gradient(#000 55%,transparent);mask:linear-gradient(#000 55%,transparent)}
+.many .f{color:#7cc7ff}
+.three{display:flex;align-items:center;gap:calc(var(--s)*1);flex-wrap:wrap;justify-content:center}
+.three span{background:#eaf7f3;border:1.5px solid var(--line);border-radius:999px;padding:calc(var(--s)*.3) calc(var(--s)*1.4);font-weight:700;font-size:calc(var(--s)*2)}
+.three svg{width:calc(var(--s)*2.6);height:calc(var(--s)*2.6);color:var(--lilyd)}
+.three code{font-family:var(--mono);direction:ltr;unicode-bidi:isolate;color:var(--deep)}
+
+/* memory */
+.mrow{display:flex;gap:calc(var(--s)*1.4);direction:ltr;justify-content:center;flex-wrap:wrap}
+.mbox{display:flex;flex-direction:column;align-items:center;gap:calc(var(--s)*.3)}
+.mbox .nm{display:flex;align-items:center;gap:5px;font-family:var(--mono);color:var(--muted);font-size:calc(var(--s)*1.8)}
+.tag{font-family:var(--mono);font-size:calc(var(--s)*1.4);padding:0 calc(var(--s)*.6);border-radius:4px;line-height:1.5;color:#fff;background:var(--deep)}
+.mbox b{min-width:calc(var(--s)*10);height:calc(var(--s)*7);display:grid;place-items:center;border-radius:calc(var(--s)*1.2);background:#fff;border:2px solid var(--ink);font-family:var(--mono);font-weight:500;font-size:calc(var(--s)*3.4);padding:0 calc(var(--s)*1);transition:background .3s,border-color .3s}
+.mbox.c b{border-color:var(--lilyd);color:var(--lilyd);border-width:3px}
+.mbox.l b{border-style:dotted;color:var(--muted)}
+.mbox.empty b{color:#bcd8d1;border-style:dashed}
+.mbox.cur b{background:#fff7d6;border-color:#e8b928}
+
+/* ===== 3. design ===== */
+.design{flex:1;min-height:0;display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr) minmax(0,1fr);gap:var(--gap)}
+.design>*{min-height:0}
+.pseudo-card{display:flex;flex-direction:column}
+.pseudo{list-style:none;display:flex;flex-direction:column;gap:calc(var(--s)*.6);flex:1;min-height:0}
+.pseudo li{flex:1;min-height:0;max-height:calc(var(--s)*8.5);display:flex;gap:calc(var(--s)*1);align-items:center;padding:0 calc(var(--s)*1.3);border-radius:calc(var(--s)*1.2);background:#fff;border:1.5px solid var(--line);font-weight:700;font-size:calc(var(--s)*2.1);transition:background .35s,border-color .35s,opacity .45s,transform .45s cubic-bezier(.22,1,.36,1);opacity:0;transform:translateX(-18px)}
+.pseudo li.show{opacity:1;transform:none}
+.pseudo li .n{font-family:var(--mono);font-size:calc(var(--s)*2);color:#bcd8d1;flex:none;width:1.2em}
+.pseudo li.ind{margin-inline-start:calc(var(--s)*3.5);border-inline-start:4px solid var(--lily)}
+.pseudo li.fresh{background:#e7f8ea;border-color:var(--lily)}
+.pseudo li.cur{background:#fff7d6;border-color:#e8b928}
+.pseudo li.cur .n{color:var(--deep)}
+.pseudo code{font-family:var(--mono);direction:ltr;unicode-bidi:isolate;font-size:1em;color:var(--deep)}
+.progress{height:calc(var(--s)*1);border-radius:9px;background:var(--line);overflow:hidden;margin-top:calc(var(--s)*1);flex:none}
+.progress i{display:block;height:100%;width:0;background:var(--lily);transition:width .45s cubic-bezier(.22,1,.36,1)}
+.flow-card{display:flex;align-items:center;justify-content:center;padding:calc(var(--s)*.6)}
+#flow{width:100%;height:100%}
+#flow .node{opacity:0;transform:scale(.55);transform-box:fill-box;transform-origin:center;transition:opacity .35s,transform .55s cubic-bezier(.3,1.5,.5,1)}
+#flow .node.show{opacity:1;transform:none}
+#flow .sh{fill:#fff;stroke:#173a40;stroke-width:2.2;stroke-linejoin:round;transition:fill .3s,stroke .3s}
+#flow .node.dec .sh{fill:#fff7d6;stroke:#e8b928}
+#flow .node.pr .sh{stroke:#157a83}
+#flow .node.okn .sh{stroke:#3c9a4c;stroke-width:3}
+#flow text{fill:#173a40;font-size:15px;font-weight:700;text-anchor:middle;dominant-baseline:central;font-family:'Mada'}
+#flow text.mono{font-family:'DM Mono';font-weight:500;font-size:14px}
+#flow .node.fresh .sh{fill:#e7f8ea}
+#flow .node.visited .sh{fill:#e6f6f1}
+#flow .node.on .sh{fill:#157a83;stroke:#157a83}
+#flow .node.on text{fill:#fff}
+#flow .edge{opacity:0}
+#flow .edge.show{opacity:1}
+#flow .edge path{stroke:#5f7f84;stroke-width:2.2;fill:none;marker-end:url(#arG);stroke-dasharray:100;stroke-dashoffset:0;stroke-linejoin:round;transition:stroke .3s,stroke-width .3s}
+#flow .edge.show path{animation:draw .6s ease both}
+@keyframes draw{from{stroke-dashoffset:100}to{stroke-dashoffset:0}}
+#flow .edge text{font-size:12px;fill:#5f7f84;font-weight:800}
+#flow .edge.loop path{stroke:#ff7aa8;stroke-width:3}
+#flow .edge.loop text{fill:#e0578a}
+#flow .edge.on path{stroke:#157a83;stroke-width:4;marker-end:url(#arD)}
+.trace{display:flex;flex-direction:column;justify-content:space-between;gap:calc(var(--s)*1);transition:opacity .4s}
+.trace .btn{width:100%}
+.trace.locked{opacity:.35;pointer-events:none}
+.minibox{height:calc(var(--s)*12);border-radius:calc(var(--s)*1.4);overflow:hidden}
+.cmpbox{background:#fff;border:1.5px dashed #bcd8d1;border-radius:calc(var(--s)*1);padding:calc(var(--s)*.5);min-height:calc(var(--s)*5.6);display:flex;align-items:center;justify-content:center;font-family:var(--mono);font-size:calc(var(--s)*2.3);direction:ltr;gap:10px;flex-wrap:wrap}
+.cmpbox .t{color:var(--lilyd)} .cmpbox .f{color:var(--coral)} .cmpbox .d{color:var(--deep)}
+.trace .out{min-height:calc(var(--s)*12);flex:none}
+
+/* ===== 4. ide ===== */
+.ide{background:var(--code);border-radius:var(--r);overflow:hidden;display:flex;flex-direction:column;box-shadow:var(--shadow)}
+.ide-bar{display:flex;align-items:center;gap:calc(var(--s)*1);padding:calc(var(--s)*.9) calc(var(--s)*2);background:var(--code2);direction:ltr;flex:none}
+.ide-bar .d{width:calc(var(--s)*1.5);height:calc(var(--s)*1.5);border-radius:50%}
+.ide-bar .tab{margin-left:calc(var(--s)*1.4);font-family:var(--mono);font-size:calc(var(--s)*1.9);color:#7fb4ad}
+.code{direction:ltr;text-align:left;font-family:var(--mono);font-size:calc(var(--s)*2.8);line-height:1.5;padding:calc(var(--s)*.8) 0;flex:1;overflow:auto;display:flex;flex-direction:column;justify-content:center}
+.ln{display:flex;padding:calc(var(--s)*.5) calc(var(--s)*2) calc(var(--s)*.5) calc(var(--s)*1.4);border-left:4px solid transparent;white-space:pre;color:#e6fbf6;transition:background .25s,opacity .3s}
+.ln .no{width:calc(var(--s)*4.4);color:#4f7a7e;flex:none;user-select:none}
+.ln.ran .no{color:#8be39a}
+.ln.cur{background:rgba(255,211,92,.16);border-left-color:var(--sun)}
+.ln.body{position:relative}
+.ln.body::before{content:"";position:absolute;left:calc(var(--s)*6.4);top:0;bottom:0;border-left:2px dotted rgba(255,122,168,.5)}
+.sk{color:#ff9ec2}.sf{color:#7cc7ff}.sn{color:#ffd27a}
+.vn{color:#b6f0c0}.vm{color:#ffd35c}
+.mem{display:flex;flex-direction:column;justify-content:space-between;gap:calc(var(--s)*1)}
+.calcl{display:flex;align-items:center;justify-content:center;gap:12px;direction:ltr;flex-wrap:wrap;background:#fff;border:1.5px dashed #bcd8d1;border-radius:calc(var(--s)*1);min-height:calc(var(--s)*5.6);font-family:var(--mono);font-size:calc(var(--s)*2.5);padding:calc(var(--s)*.4) calc(var(--s)*1.2)}
+.calcl .ph2{font-family:'Mada';font-weight:600;color:var(--muted);font-size:.8em;direction:rtl}
+.calcl .t{color:var(--lilyd)} .calcl .f{color:var(--coral)} .calcl .d{color:var(--deep)}
+.mem .out{min-height:calc(var(--s)*13);flex:none}
+.token{position:fixed;left:0;top:0;z-index:40;pointer-events:none;font-family:var(--mono);font-size:calc(var(--s)*2.8);background:var(--sun);color:var(--ink);border:2px solid var(--ink);border-radius:999px;padding:0 calc(var(--s)*1.2);box-shadow:0 4px 10px rgba(0,0,0,.2);white-space:nowrap;will-change:transform}
+.token.g{background:#c8f2cf} .token.p{background:#ffd3e3}
+.spark{position:fixed;left:0;top:0;pointer-events:none;z-index:70;will-change:transform;border-radius:50% 0 50% 50%}
+.ring{position:fixed;left:0;top:0;pointer-events:none;z-index:69;border:3px solid var(--lotus);border-radius:50%}
+.shake{animation:shake .45s}
+@keyframes shake{0%,100%{transform:translateX(0)}20%,60%{transform:translateX(-7px)}40%,80%{transform:translateX(7px)}}
+
+/* ===== 5. test ===== */
+.tside{display:flex;flex-direction:column;gap:calc(var(--s)*1.2);min-height:0}
+.test-in{display:flex;gap:calc(var(--s)*1);flex-wrap:wrap}
+.field{flex:1;min-width:160px;direction:ltr;font-family:var(--mono);font-size:calc(var(--s)*3.4);padding:calc(var(--s)*.5) calc(var(--s)*2);border-radius:999px;border:2px solid var(--ink);background:#fff;color:var(--ink);outline:none;transition:box-shadow .2s}
+.field:focus{box-shadow:0 0 0 4px rgba(92,196,107,.3)}
+.err{color:var(--coral);font-weight:700;font-size:calc(var(--s)*1.9);min-height:calc(var(--s)*2.8)}
+.tside .out{flex:1;min-height:0}
+.tvis{display:flex;flex-direction:column;gap:calc(var(--s)*1.2)}
+.tvis .pondbox{flex:1}
+.tsteps{display:flex;flex-direction:column;gap:calc(var(--s)*.6);flex:none}
+.tstep{display:flex;align-items:center;gap:calc(var(--s)*1.1);padding:calc(var(--s)*.5) calc(var(--s)*1.4);background:#fff;border:1.5px solid var(--line);border-radius:calc(var(--s)*1.1);font-weight:700;font-size:calc(var(--s)*2);opacity:.45;transition:opacity .3s,border-color .3s,background .3s}
+.tstep .n{font-family:var(--mono);color:#bcd8d1}
+.tstep .r{margin-inline-start:auto;font-family:var(--mono);direction:ltr;unicode-bidi:isolate;font-size:1.1em;color:var(--deep)}
+.tstep.on{opacity:1;border-color:#e8b928;background:#fff7d6}
+.tstep.done{opacity:1}
+
+/* ===== 6. improve ===== */
+.seg{display:inline-flex;background:#fff;border:2px solid var(--ink);border-radius:999px;padding:3px;gap:3px}
+.seg button{border:0;background:transparent;font-weight:800;font-size:calc(var(--s)*2);padding:calc(var(--s)*.4) calc(var(--s)*1.8);border-radius:999px;cursor:pointer;display:flex;align-items:center;gap:calc(var(--s)*.8);transition:.25s}
+.seg button b{font-family:var(--mono);font-weight:500}
+.seg button.on{background:var(--deep);color:#fff}
+.imp-card{display:flex;flex-direction:column;gap:calc(var(--s)*1.3);justify-content:space-evenly}
+.imp-card h3{font-family:var(--disp);font-weight:400;font-size:calc(var(--s)*3);display:flex;align-items:center;gap:calc(var(--s)*1.3)}
+.imp-card p{color:var(--muted);font-weight:600;font-size:calc(var(--s)*2.2);line-height:1.6}
+.imp-card .art{width:100%;flex:1 1 0;min-height:calc(var(--s)*10);max-height:calc(var(--s)*20)}
+.nextrow{display:flex;align-items:center;justify-content:space-between;gap:calc(var(--s)*1.4);flex-wrap:wrap;border-top:2px dashed var(--line);padding-top:calc(var(--s)*1.4)}
+.nextrow b{font-family:var(--disp);font-weight:400;font-size:calc(var(--s)*2.6)}
+
+.bottom{display:flex;align-items:center;justify-content:space-between;gap:calc(var(--s)*1.6);padding:calc(var(--s)*.9) calc(var(--s)*3);background:#fff;border-top:1px solid var(--line)}
+.hints{display:flex;gap:calc(var(--s)*.8);flex-wrap:wrap;justify-content:center}
+.hint-btn{display:flex;align-items:center;gap:calc(var(--s)*.7);padding:calc(var(--s)*.45) calc(var(--s)*1.5);border-radius:999px;background:#fff0f5;border:1.5px solid #ffc2d7;color:var(--ink);font-size:calc(var(--s)*1.9);font-weight:700;cursor:pointer;transition:transform .2s cubic-bezier(.22,1,.36,1),background .2s}
+.hint-btn:hover{transform:translateY(-2px);background:#ffe1ec}
+.hint-btn svg{width:calc(var(--s)*2.3);height:calc(var(--s)*2.3);flex:none;color:#e0578a}
+.sheet-wrap{position:fixed;inset:0;background:rgba(23,58,64,.4);backdrop-filter:blur(3px);display:flex;align-items:flex-end;justify-content:center;opacity:0;pointer-events:none;transition:opacity .3s;z-index:50}
+.sheet-wrap.open{opacity:1;pointer-events:auto}
+.sheet{width:min(680px,100%);max-height:86vh;overflow:auto;background:#fff;border-radius:26px 26px 0 0;padding:14px 24px 26px;transform:translateY(100%);transition:transform .45s cubic-bezier(.22,1,.36,1);box-shadow:0 -10px 30px rgba(23,58,64,.2)}
+.sheet-wrap.open .sheet{transform:none}
+.grab{width:50px;height:5px;border-radius:9px;background:var(--line);margin:0 auto 14px}
+.sheet-head{display:flex;align-items:center;gap:12px;margin-bottom:10px}
+.sheet-head .av{width:52px;height:52px}
+.sheet-head h3{font-family:var(--disp);font-weight:400;font-size:24px;flex:1}
+.x{width:40px;height:40px;border-radius:50%;border:2px solid var(--ink);background:#fff;cursor:pointer;display:grid;place-items:center}
+.x svg{width:18px;height:18px}
+.sheet-body p{line-height:1.85;font-weight:600;font-size:17px}
+.sheet-body p+p{margin-top:4px}
+pre.snip{direction:ltr;text-align:left;background:var(--code);color:#e6fbf6;border-radius:12px;padding:12px 16px;font-family:var(--mono);font-size:15px;line-height:1.6;overflow:auto;margin-top:10px}
+.sheet.big{width:min(1100px,96vw);height:min(90vh,calc(var(--s)*82));display:flex;flex-direction:column;padding:calc(var(--s)*1.6) calc(var(--s)*4) calc(var(--s)*3)}
+.sheet.big .sheet-head h3{font-size:calc(var(--s)*4)}
+.sheet.big .sheet-head .av{width:calc(var(--s)*7.5);height:calc(var(--s)*7.5)}
+.sheet.big .sheet-body{flex:1;min-height:0;display:flex;flex-direction:column}
+.nx{flex:1;min-height:0;display:flex;flex-direction:column;align-items:center;justify-content:space-between;gap:calc(var(--s)*1.6);text-align:center}
+.nx .g{font-family:var(--disp);font-size:calc(var(--s)*3.4)}
+.nx .g b{color:#e0578a;font-weight:400}
+.nx .pbox{flex:1 1 0;min-height:calc(var(--s)*14);width:100%}
+.nx .tip{display:flex;align-items:center;gap:calc(var(--s)*1.4);background:#fff0f5;border:2px solid #ffc2d7;border-radius:calc(var(--s)*1.6);padding:calc(var(--s)*1.2) calc(var(--s)*2.6);font-size:calc(var(--s)*2.5);font-weight:700}
+.nx .tip svg{flex:none;width:calc(var(--s)*4);height:calc(var(--s)*4);color:#e0578a}
+.nx .try{color:var(--muted);font-weight:600;font-size:calc(var(--s)*2.2)}
+.nx .try a{color:var(--deep);font-weight:800}
+
+@media(max-width:1000px) and (min-width:821px){.design{grid-template-columns:1fr 1fr}.trace{grid-column:1 / -1}}
+@media(max-width:820px),(max-height:480px){
+  :root{--s:6.4px}
+  .story,.split,.an-grid,.design,.loopzone{grid-template-columns:1fr;grid-template-rows:none;flex:none}
+  .frog{flex:none;height:240px}
+  .pondbox{flex:none;height:170px}
+  .an{min-height:220px}
+  .pseudo li{flex:none;min-height:44px}
+  .flow-card{height:560px}
+  .code{font-size:14px}
+  .screen{padding:14px 14px 20px}
+  .hint-btn span,.nav-txt,.brand span{display:none}
+  .hint-btn{padding:8px}
+  .top,.bottom{padding:8px 12px}
+}
+</style>
+</head>
+<body>
+
+<svg width="0" height="0" style="position:absolute" aria-hidden="true">
+  <defs>
+    <g id="frogHead">
+      <ellipse cx="120" cy="112" rx="82" ry="48" fill="#7ed957"/>
+      <circle cx="78" cy="72" r="27" fill="#7ed957"/><circle cx="162" cy="72" r="27" fill="#7ed957"/>
+      <circle cx="78" cy="70" r="18" fill="#fff"/><circle cx="162" cy="70" r="18" fill="#fff"/>
+      <g style="opacity:calc(1 - var(--happy,0))"><g class="blink"><circle cx="81" cy="71" r="9" fill="#173a40"/><circle cx="84" cy="67" r="3" fill="#fff"/></g><g class="blink"><circle cx="159" cy="71" r="9" fill="#173a40"/><circle cx="162" cy="67" r="3" fill="#fff"/></g></g>
+      <g style="opacity:var(--happy,0)"><circle cx="78" cy="70" r="19" fill="#7ed957"/><circle cx="162" cy="70" r="19" fill="#7ed957"/><path d="M66 74 Q78 60 90 74 M150 74 Q162 60 174 74" stroke="#2e6b2a" stroke-width="4.5" fill="none" stroke-linecap="round"/></g>
+      <path d="M80 118 Q120 150 160 118" stroke="#2e6b2a" stroke-width="4.5" fill="none" stroke-linecap="round" style="opacity:calc(1 - var(--oops,0))"/>
+      <path d="M92 132 Q120 116 148 132" stroke="#2e6b2a" stroke-width="4.5" fill="none" stroke-linecap="round" style="opacity:var(--oops,0)"/>
+      <circle cx="66" cy="116" r="9" fill="#ff8fb0" opacity=".5"/><circle cx="174" cy="116" r="9" fill="#ff8fb0" opacity=".5"/>
+      <circle cx="108" cy="100" r="2.5" fill="#2e6b2a"/><circle cx="132" cy="100" r="2.5" fill="#2e6b2a"/>
+      <g transform="translate(120 52)"><path d="M0 4 C-6 -4 -4 -12 0 -16 C4 -12 6 -4 0 4Z" fill="#ff7aa8"/><path d="M0 4 C-10 0 -14 -6 -12 -10 C-6 -10 -2 -4 0 4Z" fill="#ff9ec2"/><path d="M0 4 C10 0 14 -6 12 -10 C6 -10 2 -4 0 4Z" fill="#ff9ec2"/></g>
+    </g>
+    <g id="frogMini">
+      <ellipse cx="0" cy="-4" rx="30" ry="22" fill="#7ed957" stroke="#3c9a4c" stroke-width="2"/>
+      <ellipse cx="0" cy="2" rx="18" ry="12" fill="#d9f7b8"/>
+      <circle cx="-14" cy="-24" r="10" fill="#7ed957" stroke="#3c9a4c" stroke-width="2"/><circle cx="14" cy="-24" r="10" fill="#7ed957" stroke="#3c9a4c" stroke-width="2"/>
+      <circle cx="-14" cy="-25" r="6.5" fill="#fff"/><circle cx="14" cy="-25" r="6.5" fill="#fff"/>
+      <circle cx="-12.5" cy="-25" r="3.4" fill="#173a40"/><circle cx="15.5" cy="-25" r="3.4" fill="#173a40"/>
+      <path d="M-10 -8 Q0 0 10 -8" stroke="#2e6b2a" stroke-width="2.5" fill="none" stroke-linecap="round"/>
+      <ellipse cx="-26" cy="14" rx="10" ry="5" fill="#5fb84a"/><ellipse cx="26" cy="14" rx="10" ry="5" fill="#5fb84a"/>
+    </g>
+  </defs>
+</svg>
+
+<div class="app">
+  <header class="top">
+    <div class="brand">
+      <div class="logo"><svg viewBox="-34 -40 68 64"><use href="#frogMini"/></svg></div>
+      <div><b><span class="en">1 to N</span>من 1 لحد N</b><span>Sheet #2 (Loops) · Problem A</span></div>
+    </div>
+    <nav class="stepper" id="stepper"></nav>
+  </header>
+
+  <main class="stage">
+
+    <!-- ===== 1 ===== -->
+    <section class="screen active" data-title="الفكرة">
+      <div class="screen-head">
+        <div><span class="kicker">نطّة 1</span><h2>الفكرة: نط من ورقة لورقة و<span class="hl">عدّ</span></h2></div>
+        <p>كل نطّة = لفّة في الـ Loop</p>
+      </div>
+      <div class="story">
+        <div class="hero">
+          <div class="bubble" id="frSay">أنا هنط على ورق البركة وأقول رقم كل ورقة.<br>دوس <b>نطّة</b> وكرر معايا!</div>
+          <svg class="frog" id="frog" viewBox="24 20 192 214" aria-label="الضفدعة">
+            <ellipse cx="120" cy="228" rx="78" ry="7" fill="rgba(23,58,64,.16)"/>
+            <g class="bodyg" id="frogBody">
+              <ellipse cx="58" cy="206" rx="36" ry="18" fill="#5fb84a"/><ellipse cx="182" cy="206" rx="36" ry="18" fill="#5fb84a"/>
+              <path d="M30 220 l-8 6 M38 222 l-4 8 M46 222 l2 8 M210 220 l8 6 M202 222 l4 8 M194 222 l-2 8" stroke="#5fb84a" stroke-width="6" stroke-linecap="round"/>
+              <ellipse cx="120" cy="170" rx="70" ry="58" fill="#7ed957"/>
+              <ellipse cx="120" cy="184" rx="46" ry="38" fill="#d9f7b8"/>
+              <ellipse class="throat" cx="120" cy="148" rx="20" ry="8" fill="#c7f09e"/>
+              <use href="#frogHead"/>
+              <rect x="80" y="168" width="80" height="48" rx="10" fill="#ffd35c" stroke="#a06a12" stroke-width="3"/>
+              <rect x="86" y="174" width="68" height="36" rx="6" fill="#fff3c4"/>
+              <text id="heroNum" x="120" y="193" text-anchor="middle" dominant-baseline="central" font-family="DM Mono" font-size="26" fill="#173a40" direction="ltr">1</text>
+              <circle cx="80" cy="192" r="10" fill="#6cc84f"/><circle cx="160" cy="192" r="10" fill="#6cc84f"/>
+            </g>
+          </svg>
+        </div>
+        <div class="card park">
+          <div class="park-top">
+            <span class="park-title">البركة</span>
+            <div class="chips" id="nChips"><span class="label" style="margin:0">N =</span></div>
+            <button class="btn icon sndbtn" aria-label="الصوت"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M11 5L6 9H2v6h4l5 4z"/><path class="w" d="M15.5 8.5a5 5 0 0 1 0 7M19 5a10 10 0 0 1 0 14"/><path class="x" d="M16 9l6 6M22 9l-6 6"/></svg></button>
+          </div>
+          <div class="pondbox"><div class="pond" id="gPond"></div></div>
+          <div class="loopzone">
+            <div class="parts3" id="gParts">
+              <div class="lp" data-k="0"><i>1</i>نسأل: لسه موصلناش؟<code id="gQ">number &lt;= n</code></div>
+              <div class="lp" data-k="1"><i>2</i>نطبع الرقم<code>print(number)</code></div>
+              <div class="lp" data-k="2"><i>3</i>ننط للي بعده<code>number + 1</code></div>
+            </div>
+            <div class="side">
+              <div class="cnt"><span>number = <b id="gNum">1</b></span><span>لفات: <b id="gLaps">0</b></span></div>
+              <div class="out" id="gOut"></div>
+            </div>
+          </div>
+          <div class="gbtns">
+            <button class="btn lily" id="gStep"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"><path d="M4 17c3-8 13-8 16 0"/><path d="M17 13l3 4-4 1"/></svg>نطّة</button>
+            <button class="btn deep" id="gAuto"><svg viewBox="0 0 24 24" fill="currentColor"><path d="M7 4v16l13-8z"/></svg><span>خليها تنط لوحدها</span></button>
+            <button class="btn icon" id="gReset" aria-label="من الأول"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M3 12a9 9 0 1 0 3-6.7L3 8"/><path d="M3 3v5h5"/></svg></button>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ===== 2 ===== -->
+    <section class="screen" data-title="التحليل">
+      <div class="screen-head">
+        <div><span class="kicker">نطّة 2</span><h2>التحليل: نفهم المسألة حتة حتة</h2></div>
+      </div>
+      <div class="an-grid">
+        <div class="card an locked">
+          <div class="an-top"><div class="an-ic" style="background:var(--deep)"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3v12M7 10l5 5 5-5"/><path d="M4 20h16"/></svg></div><h3>المدخلات</h3><span class="num">01</span></div>
+          <div class="an-body">
+            <div class="bign"><span>n =</span><b>5</b></div>
+            <small>رقم واحد بس</small>
+          </div>
+          <div class="q">?</div>
+        </div>
+        <div class="card an locked">
+          <div class="an-top"><div class="an-ic" style="background:var(--lily)"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="13" rx="2"/><path d="M8 21h8M12 17v4"/></svg></div><h3>المخرجات</h3><span class="num">02</span></div>
+          <div class="an-body">
+            <div class="colout"><div class="o">1<br>2<br>3<br>4<br>5</div></div>
+            <small>من 1 لحد n، كل رقم في سطر لوحده</small>
+          </div>
+          <div class="q">?</div>
+        </div>
+        <div class="card an locked">
+          <div class="an-top"><div class="an-ic" style="background:var(--coral)"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2l10 18H2z"/><path d="M12 9v5M12 17.5v.5"/></svg></div><h3>المشكلة</h3><span class="num">03</span></div>
+          <div class="an-body">
+            <div class="many"><span class="f">print</span>(1)<br><span class="f">print</span>(2)<br><span class="f">print</span>(3)<br>…<br><span class="f">print</span>(1000)</div>
+            <small>لو n = 1000؟ مش هنكتب ألف سطر!</small>
+          </div>
+          <div class="q">?</div>
+        </div>
+        <div class="card an locked">
+          <div class="an-top"><div class="an-ic" style="background:var(--lotus)"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12a9 9 0 1 1-3-6.7"/><path d="M21 3v6h-6"/></svg></div><h3>الحل: Loop</h3><span class="num">04</span></div>
+          <div class="an-body">
+            <div class="three">
+              <span>ابدأ من <code>1</code></span>
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"><path d="M19 12H5M11 6l-6 6 6 6"/></svg>
+              <span>طول ما <code>≤ n</code>: اطبع</span>
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"><path d="M19 12H5M11 6l-6 6 6 6"/></svg>
+              <span>زوّد <code>1</code> وكرر</span>
+            </div>
+            <small>نكتب الخطوة مرة واحدة، والكمبيوتر يكررها</small>
+          </div>
+          <div class="q">?</div>
+        </div>
+      </div>
+      <div class="dock">
+        <div class="av"><svg viewBox="34 38 172 124"><use href="#frogHead"/></svg></div>
+        <div class="txt" id="anSay"></div>
+        <div class="controls">
+          <button class="btn deep" id="anNext"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.8" stroke-linecap="round" stroke-linejoin="round"><path d="M15 18l-6-6 6-6"/></svg><span id="anNextTxt">اكشف</span></button>
+          <button class="btn icon" id="anReset" aria-label="من الأول"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M3 12a9 9 0 1 0 3-6.7L3 8"/><path d="M3 3v5h5"/></svg></button>
+        </div>
+      </div>
+    </section>
+
+    <!-- ===== 3 ===== -->
+    <section class="screen" data-title="التصميم">
+      <div class="screen-head">
+        <div><span class="kicker">نطّة 3</span><h2>التصميم: أول Loop نبنيه</h2></div>
+        <p>لاحظ السهم اللي بيرجع لورا</p>
+      </div>
+      <div class="design">
+        <div class="card pseudo-card">
+          <span class="label">السودو كود</span>
+          <ol class="pseudo" id="pseudo">
+            <li><span class="n">1</span>ابدأ</li>
+            <li><span class="n">2</span>اقرأ <code>n</code></li>
+            <li><span class="n">3</span><code>number ← 1</code></li>
+            <li><span class="n">4</span>طول ما <code>number ≤ n</code> كرر:</li>
+            <li class="ind"><span class="n">5</span>اطبع <code>number</code></li>
+            <li class="ind"><span class="n">6</span><code>number ← number + 1</code></li>
+            <li><span class="n">7</span>انتهي</li>
+          </ol>
+          <div class="progress"><i id="buildBar"></i></div>
+        </div>
+        <div class="card flow-card">
+          <svg id="flow" viewBox="0 4 420 534">
+            <defs>
+              <marker id="arG" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto"><path d="M0 0L10 5L0 10z" fill="#5f7f84"/></marker>
+              <marker id="arD" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="5" markerHeight="5" orient="auto"><path d="M0 0L10 5L0 10z" fill="#157a83"/></marker>
+              <marker id="arP" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="5" markerHeight="5" orient="auto"><path d="M0 0L10 5L0 10z" fill="#ff7aa8"/></marker>
+            </defs>
+            <g class="edge" id="e-1"><path pathLength="100" d="M210 52 V72"/></g>
+            <g class="edge" id="e-2"><path pathLength="100" d="M210 116 V136"/></g>
+            <g class="edge" id="e-3"><path pathLength="100" d="M210 180 V202"/></g>
+            <g class="edge" id="e-y"><path pathLength="100" d="M210 296 V330"/><text x="230" y="312">نعم</text></g>
+            <g class="edge" id="e-4"><path pathLength="100" d="M210 374 V396"/></g>
+            <g class="edge loop" id="e-back"><path pathLength="100" d="M100 419 H36 V250 H108" style="marker-end:url(#arP)"/><text x="22" y="334" style="writing-mode:vertical-rl">كرر</text></g>
+            <g class="edge" id="e-n"><path pathLength="100" d="M310 250 H384 V511 H262"/><text x="350" y="238">لا</text></g>
+            <g class="node" id="n-start"><rect class="sh" x="160" y="10" width="100" height="42" rx="21"/><text x="210" y="31">ابدأ</text></g>
+            <g class="node" id="n-in"><path class="sh" d="M140 74 H300 L280 116 H120Z"/><text x="210" y="95">اقرأ <tspan font-family="DM Mono">n</tspan></text></g>
+            <g class="node pr" id="n-p0"><rect class="sh" x="130" y="138" width="160" height="42" rx="8"/><text x="210" y="159" class="mono" direction="ltr">number = 1</text></g>
+            <g class="node dec" id="n-d"><path class="sh" d="M210 204 L310 250 L210 296 L110 250Z"/><text x="210" y="250" class="mono" direction="ltr">number &lt;= n</text></g>
+            <g class="node okn" id="n-out"><path class="sh" d="M136 332 H304 L284 374 H116Z"/><text x="210" y="353">اطبع <tspan font-family="DM Mono">number</tspan></text></g>
+            <g class="node pr" id="n-inc"><rect class="sh" x="100" y="398" width="220" height="42" rx="8"/><text x="210" y="419" class="mono" direction="ltr">number = number + 1</text></g>
+            <g class="node" id="n-end"><rect class="sh" x="160" y="490" width="100" height="42" rx="21"/><text x="210" y="511">انتهي</text></g>
+          </svg>
+        </div>
+        <div class="card trace locked" id="trace">
+          <div><span class="label">جرّب على مثال</span><div class="chips" id="flowChips"></div></div>
+          <button class="btn lily" id="flowRun"><svg viewBox="0 0 24 24" fill="currentColor"><path d="M7 4v16l13-8z"/></svg>تشغيل</button>
+          <div><span class="label">البركة</span><div class="minibox"><div class="pond" id="fPond"></div></div></div>
+          <div><span class="label">الخطوة</span><div class="cmpbox" id="fCmp">—</div></div>
+          <div><span class="label">المخرج</span><div class="out" id="fOut"></div></div>
+        </div>
+      </div>
+      <div class="dock">
+        <div class="av"><svg viewBox="34 38 172 124"><use href="#frogHead"/></svg></div>
+        <div class="txt" id="dsSay"></div>
+        <div class="controls">
+          <button class="btn deep" id="bNext"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.8" stroke-linecap="round"><path d="M12 5v14M5 12h14"/></svg><span id="bNextTxt"></span></button>
+          <button class="btn" id="bAll">ابني الكل</button>
+          <button class="btn icon" id="bReset" aria-label="امسح وابني من الأول"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M3 12a9 9 0 1 0 3-6.7L3 8"/><path d="M3 3v5h5"/></svg></button>
+        </div>
+      </div>
+    </section>
+
+    <!-- ===== 4 ===== -->
+    <section class="screen" data-title="التنفيذ">
+      <div class="screen-head">
+        <div><span class="kicker">نطّة 4</span><h2>التنفيذ: الكود جوه الجهاز</h2></div>
+        <div class="chips" id="ideChips"><span class="label" style="margin:0">n =</span></div>
+      </div>
+      <div class="split">
+        <div class="ide">
+          <div class="ide-bar"><span class="d" style="background:#ff6b6b"></span><span class="d" style="background:#ffd27a"></span><span class="d" style="background:#8be39a"></span><span class="tab">one_to_n.py</span></div>
+          <div class="code" id="code"></div>
+        </div>
+        <div class="card mem">
+          <div><span class="label">الذاكرة</span><div class="mrow" id="memRow"></div></div>
+          <div class="minibox"><div class="pond" id="mPond"></div></div>
+          <div><span class="label">الشرط</span><div class="calcl" id="calcLane"></div></div>
+          <div><span class="label">الشاشة</span><div class="out" id="conOut"></div></div>
+        </div>
+      </div>
+      <div class="dock">
+        <div class="av"><svg viewBox="34 38 172 124"><use href="#frogHead"/></svg></div>
+        <div class="txt" id="ideSay"></div>
+        <div class="controls">
+          <button class="btn deep" id="ideStep"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.8" stroke-linecap="round" stroke-linejoin="round"><path d="M15 18l-6-6 6-6"/></svg>خطوة</button>
+          <button class="btn lily" id="ideRun"><svg viewBox="0 0 24 24" fill="currentColor"><path d="M7 4v16l13-8z"/></svg><span>تشغيل تلقائي</span></button>
+          <button class="btn icon sndbtn" aria-label="الصوت"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M11 5L6 9H2v6h4l5 4z"/><path class="w" d="M15.5 8.5a5 5 0 0 1 0 7M19 5a10 10 0 0 1 0 14"/><path class="x" d="M16 9l6 6M22 9l-6 6"/></svg></button>
+          <button class="btn icon" id="ideReset" aria-label="من الأول"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M3 12a9 9 0 1 0 3-6.7L3 8"/><path d="M3 3v5h5"/></svg></button>
+        </div>
+      </div>
+    </section>
+
+    <!-- ===== 5 ===== -->
+    <section class="screen" data-title="الاختبار">
+      <div class="screen-head">
+        <div><span class="kicker">نطّة 5</span><h2>الاختبار: جرّب أي n</h2></div>
+        <p>حتى لو كبير جداً</p>
+      </div>
+      <div class="split">
+        <div class="card tside">
+          <div>
+            <span class="label">Input</span>
+            <div class="test-in">
+              <input class="field" id="tIn" value="7" spellcheck="false" autocomplete="off" inputmode="numeric">
+              <button class="btn lily" id="tRun"><svg viewBox="0 0 24 24" fill="currentColor"><path d="M7 4v16l13-8z"/></svg>شغّل</button>
+            </div>
+            <div class="err" id="tErr"></div>
+          </div>
+          <div class="controls"><div class="chips" id="tChips"></div><button class="btn" id="tRand"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="4"/><circle cx="8.5" cy="8.5" r="1.3" fill="currentColor"/><circle cx="15.5" cy="15.5" r="1.3" fill="currentColor"/><circle cx="12" cy="12" r="1.3" fill="currentColor"/></svg>عشوائي</button></div>
+          <span class="label" style="margin-bottom:0">Output</span>
+          <div class="out" id="tOut"></div>
+        </div>
+        <div class="card tvis">
+          <div class="pondbox"><div class="pond" id="tPond"></div></div>
+          <div class="tsteps" id="tSteps"></div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ===== 6 ===== -->
+    <section class="screen" data-title="التطوير">
+      <div class="screen-head">
+        <div><span class="kicker">نطّة 6</span><h2>التطوير: Loop أقصر بـ for</h2></div>
+        <div class="seg" id="seg">
+          <button class="on" data-v="0">while <b>5</b></button>
+          <button data-v="1">for <b>3</b></button>
+        </div>
+      </div>
+      <div class="split">
+        <div class="ide">
+          <div class="ide-bar"><span class="d" style="background:#ff6b6b"></span><span class="d" style="background:#ffd27a"></span><span class="d" style="background:#8be39a"></span><span class="tab" id="impTab">one_to_n.py</span></div>
+          <div class="code" id="impCode"></div>
+        </div>
+        <div class="card imp-card">
+          <h3><span class="an-ic" style="background:var(--deep)"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12a9 9 0 1 1-3-6.7"/><path d="M21 3v6h-6"/></svg></span><span class="ltr" style="font-family:var(--mono)">range(1, n + 1)</span></h3>
+          <p><span class="ltr">for</span> بتعمل الـ 3 حاجات لوحدها: تبدأ، تسأل، وتزوّد. و<span class="ltr">range</span> بتقف <b>قبل</b> الرقم التاني، علشان كده <span class="ltr">n + 1</span>.</p>
+          <svg class="art" viewBox="0 0 520 130" direction="ltr" font-family="DM Mono">
+            <path d="M20 70 H500" stroke="#173a40" stroke-width="3"/>
+            <g id="rangeArt"></g>
+          </svg>
+          <div class="nextrow"><b>المسألة الجاية: Even Numbers</b><button class="btn lotus" id="nextBtn"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M9 18h6M10 22h4M12 2a7 7 0 0 0-4 12.7V17h8v-2.3A7 7 0 0 0 12 2z"/></svg>شوف التلميح</button></div>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <footer class="bottom">
+    <button class="btn" id="prev"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.8" stroke-linecap="round" stroke-linejoin="round"><path d="M9 18l6-6-6-6"/></svg><span class="nav-txt">السابق</span></button>
+    <div class="hints" id="hints"></div>
+    <button class="btn deep" id="next"><span class="nav-txt">التالي</span><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.8" stroke-linecap="round" stroke-linejoin="round"><path d="M15 18l-6-6 6-6"/></svg></button>
+  </footer>
+</div>
+
+<div class="sheet-wrap" id="sheetWrap">
+  <div class="sheet" role="dialog" aria-modal="true">
+    <div class="grab"></div>
+    <div class="sheet-head">
+      <div class="av"><svg viewBox="34 38 172 124"><use href="#frogHead"/></svg></div>
+      <h3 id="sheetTitle"></h3>
+      <button class="x" id="sheetClose" aria-label="إغلاق"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round"><path d="M6 6l12 12M18 6L6 18"/></svg></button>
+    </div>
+    <div class="sheet-body" id="sheetBody"></div>
+  </div>
+</div>
+
+<script>
+const $ = id => document.getElementById(id);
+const wait = ms => new Promise(r => setTimeout(r, ms));
+const retrigger = (el, cls) => { el.classList.remove(cls); void el.offsetWidth; el.classList.add(cls); };
+const MAXN = 100000;
+function parseN(str){
+  const t = str.trim();
+  if (!/^\d{1,6}$/.test(t)) return { err:'اكتب رقم صحيح موجب واحد' };
+  const n = +t;
+  if (n < 1) return { err:'n لازم يكون 1 أو أكبر' };
+  if (n > MAXN) return { err:'خلّيه لحد 100000 علشان العرض' };
+  return { n };
+}
+
+/* ================= sounds (Web Audio, synthesized) ================= */
+let actx = null, soundOn = true, noiseBuf = null, master = null, revIn = null;
+function ac(){
+  if (!soundOn) return null;
+  try {
+    if (!actx){
+      actx = new (window.AudioContext || window.webkitAudioContext)();
+      const sr = actx.sampleRate;
+      // warm pink noise
+      noiseBuf = actx.createBuffer(1, sr * 2, sr);
+      const d = noiseBuf.getChannelData(0);
+      let b0 = 0, b1 = 0, b2 = 0, b3 = 0, b4 = 0, b5 = 0, b6 = 0;
+      for (let i = 0; i < d.length; i++){
+        const w = Math.random() * 2 - 1;
+        b0 = .99886 * b0 + w * .0555179; b1 = .99332 * b1 + w * .0750759; b2 = .969 * b2 + w * .153852;
+        b3 = .8665 * b3 + w * .3104856; b4 = .55 * b4 + w * .5329522; b5 = -.7616 * b5 - w * .016898;
+        d[i] = (b0 + b1 + b2 + b3 + b4 + b5 + b6 + w * .5362) * .11; b6 = w * .115926;
+      }
+      // master: gentle compression, small room reverb
+      const comp = actx.createDynamicsCompressor();
+      comp.threshold.value = -20; comp.ratio.value = 3; comp.attack.value = .003; comp.release.value = .2;
+      master = actx.createGain(); master.gain.value = .85;
+      master.connect(comp); comp.connect(actx.destination);
+      const conv = actx.createConvolver();
+      const len = Math.floor(sr * 1.4), ir = actx.createBuffer(2, len, sr);
+      for (let ch = 0; ch < 2; ch++){ const x = ir.getChannelData(ch); for (let i = 0; i < len; i++) x[i] = (Math.random() * 2 - 1) * Math.pow(1 - i / len, 3.2); }
+      conv.buffer = ir;
+      revIn = actx.createGain(); revIn.gain.value = .5;
+      const tone = actx.createBiquadFilter(); tone.type = 'lowpass'; tone.frequency.value = 5000;
+      revIn.connect(conv); conv.connect(tone); tone.connect(comp);
+    }
+    if (actx.state === 'suspended') actx.resume();
+    return actx;
+  } catch (e) { return null; }
+}
+function route(node, pan = 0, panTo = null, t = 0, dur = 0, rv = 0){
+  let n = node;
+  if (actx.createStereoPanner){
+    const p = actx.createStereoPanner();
+    p.pan.setValueAtTime(pan, t || actx.currentTime);
+    if (panTo !== null) p.pan.linearRampToValueAtTime(panTo, t + dur);
+    n.connect(p); n = p;
+  }
+  n.connect(master);
+  if (rv){ const sd = actx.createGain(); sd.gain.value = rv; n.connect(sd); sd.connect(revIn); }
+}
+function nz({ t, dur, type = 'bandpass', f0, f1 = f0, q = 1, peak = .2, a = .01, pan = 0, panTo = null, rv = 0 }){
+  const c = actx, src = c.createBufferSource(); src.buffer = noiseBuf; src.loop = true;
+  const f = c.createBiquadFilter(); f.type = type; f.Q.value = q;
+  f.frequency.setValueAtTime(f0, t); f.frequency.exponentialRampToValueAtTime(Math.max(20, f1), t + dur);
+  const g = c.createGain();
+  g.gain.setValueAtTime(0, t); g.gain.linearRampToValueAtTime(peak, t + a); g.gain.setTargetAtTime(0, t + a, Math.max(.008, (dur - a) / 3.5));
+  src.connect(f); f.connect(g); route(g, pan, panTo, t, dur, rv);
+  src.start(t, Math.random() * 1.5); src.stop(t + dur + .3);
+}
+function os({ t, dur, f0, f1 = null, type = 'sine', peak = .1, a = .006, pan = 0, rv = 0 }){
+  const c = actx, o = c.createOscillator(); o.type = type;
+  o.frequency.setValueAtTime(f0, t); if (f1) o.frequency.exponentialRampToValueAtTime(f1, t + dur);
+  const g = c.createGain();
+  g.gain.setValueAtTime(0, t); g.gain.linearRampToValueAtTime(peak, t + a); g.gain.setTargetAtTime(0, t + a, Math.max(.01, (dur - a) / 4));
+  o.connect(g); route(g, pan, null, t, dur, rv);
+  o.start(t); o.stop(t + dur + .3);
+}
+/* soft FM bell: warm, glassy, never harsh */
+function bell(f, t, dur = .8, peak = .1, rv = .35, pan = 0){
+  const c = actx, car = c.createOscillator(), mod = c.createOscillator(), mg = c.createGain(), g = c.createGain();
+  car.frequency.value = f; mod.frequency.value = f * 2.01;
+  mg.gain.setValueAtTime(f * 1.1, t); mg.gain.setTargetAtTime(0, t, .07);
+  mod.connect(mg); mg.connect(car.frequency);
+  g.gain.setValueAtTime(0, t); g.gain.linearRampToValueAtTime(peak, t + .004); g.gain.setTargetAtTime(0, t + .004, dur / 4);
+  car.connect(g); route(g, pan, null, t, dur, rv);
+  car.start(t); mod.start(t); car.stop(t + dur + .4); mod.stop(t + dur + .4);
+}
+function knock(t, pan = 0, vol = 1){
+  nz({ t, dur:.07, f0:1100, q:8, peak:.45 * vol, a:.002, pan });
+  os({ t, dur:.14, f0:220, f1:165, peak:.22 * vol, a:.003, pan });
+}
+
+const now = () => actx.currentTime + .015;
+const SND = {
+  /* springy hop */
+  hop(){ if (!ac()) return; const t = now(); os({ t, dur:.18, f0:260, f1:760, type:'sine', peak:.12, a:.008 }); nz({ t, dur:.06, f0:1800, q:1.2, peak:.06, a:.004 }); },
+  /* soft landing on a lily pad */
+  plop(){ if (!ac()) return; const t = now(); os({ t, dur:.16, f0:520, f1:170, type:'sine', peak:.16, a:.003 }); nz({ t, dur:.14, type:'lowpass', f0:1400, f1:300, q:.8, peak:.14, a:.003, rv:.25 }); },
+  /* frog croak */
+  ribbit(){ if (!ac()) return; const t = now(); [0, .13].forEach(d => { os({ t:t + d, dur:.09, f0:190, f1:150, type:'sawtooth', peak:.045, a:.006 }); nz({ t:t + d, dur:.09, f0:900, q:5, peak:.12, a:.006 }); }); },
+  /* lotus bloom = a number printed */
+  bloom(i = 0){ if (!ac()) return; const t = now(), sc = [523, 587, 659, 784, 880, 988, 1047, 1175, 1319, 1568]; bell(sc[i % sc.length], t, .7, .08, .45, ((i % 5) - 2) * .2); },
+  splash(){ if (!ac()) return; const t = now(); nz({ t, dur:.5, type:'lowpass', f0:2600, f1:400, q:.7, peak:.2, a:.01, rv:.35 }); os({ t, dur:.2, f0:300, f1:90, peak:.12, a:.004 }); },
+  tick(){ if (!ac()) return; const t = now(); nz({ t, dur:.04, f0:3400, f1:2600, q:2.5, peak:.2, a:.002 }); os({ t, dur:.04, f0:2200, peak:.03 }); },
+  yes(){ if (!ac()) return; const t = now(); bell(880, t, .5, .08, .35, -.15); },
+  no(){ if (!ac()) return; const t = now(); os({ t, dur:.32, f0:392, f1:330, type:'triangle', peak:.1, a:.015 }); os({ t, dur:.32, f0:196, f1:165, peak:.08, a:.015 }); },
+  move(dur = .6){ if (!ac()) return; const t = now(); nz({ t, dur, f0:520, f1:2200, q:1.3, peak:.14, a:dur * .35, pan:-.35, panTo:.35 }); },
+  snap(){ if (!ac()) return; const t = now(); os({ t, dur:.22, f0:120, f1:55, peak:.3, a:.004 }); os({ t, dur:.06, f0:430, f1:950, peak:.09, a:.003 }); bell(1568, t + .04, .8, .08, .45, -.2); },
+  type(){ if (!ac()) return; const t = now(); nz({ t, dur:.035, f0:1900, q:1.4, peak:.18, a:.002, pan:(Math.random() - .5) * .3 }); os({ t, dur:.04, f0:150, peak:.045, a:.002 }); },
+  rush(dur = 2){ if (!ac()) return; const t = now(); nz({ t, dur, f0:400, f1:2600, q:1.5, peak:.1, a:dur * .2, rv:.2 }); os({ t, dur, f0:220, f1:880, type:'triangle', peak:.04, a:dur * .2 }); },
+  win(){ if (!ac()) return; const t = now(); [1047, 1319, 1568, 2093].forEach((f, i) => bell(f, t + i * .1, 1.1, .1, .5, (i - 1.5) * .3)); [2637, 3136, 3951].forEach((f, i) => bell(f, t + .45 + i * .06, .6, .03, .6, (i - 1) * .6)); }
+};
+function setSound(on){ soundOn = on; document.querySelectorAll('.sndbtn').forEach(b => b.classList.toggle('off', !on)); }
+document.querySelectorAll('.sndbtn').forEach(b => b.onclick = () => setSound(!soundOn));
+
+/* ================= motion helpers ================= */
+const easeIO = p => p < .5 ? 4 * p * p * p : 1 - Math.pow(-2 * p + 2, 3) / 2;
+function arcFrames(x0, y0, x1, y1, lift, rot = 0, sMid = 1.06, n = 36){
+  const f = [];
+  for (let i = 0; i <= n; i++){ const p = i / n, e = easeIO(p), b = Math.sin(Math.PI * e);
+    f.push({ transform:`translate(${x0 + (x1 - x0) * e}px,${y0 + (y1 - y0) * e - lift * b}px) rotate(${rot * b}deg) scale(${1 + (sMid - 1) * b})`, offset:p }); }
+  return f;
+}
+function squash(el, big = 1){
+  const k = [[0,0],[.16,-.2],[-.07,.09],[.035,-.04],[-.015,.018],[0,0]];
+  return el.animate(k.map(([x, y], i) => ({ transform:`scale(${1 + x * big},${1 + y * big})`, offset:i / (k.length - 1) })), { duration:560, easing:'linear' }).finished;
+}
+const SPARK_C = ['#ff7aa8', '#ffd35c', '#5cc46b', '#ff9ec2', '#ffffff'];
+function burst(x, y, n = 14, colors = SPARK_C){
+  const ring = document.createElement('div'); ring.className = 'ring'; ring.style.borderColor = colors[0]; document.body.appendChild(ring);
+  ring.animate([{ transform:`translate(${x - 6}px,${y - 6}px) scale(.3)`, width:'12px', height:'12px', opacity:1 }, { transform:`translate(${x - 34}px,${y - 34}px) scale(1)`, width:'68px', height:'68px', opacity:0 }],
+    { duration:560, easing:'cubic-bezier(.22,1,.36,1)', fill:'forwards' }).finished.then(() => ring.remove());
+  for (let i = 0; i < n; i++){
+    const d = document.createElement('div'), sz = 5 + Math.random() * 7;
+    d.className = 'spark';
+    Object.assign(d.style, { width:sz + 'px', height:sz + 'px', background:colors[i % colors.length] });
+    document.body.appendChild(d);
+    const a = Math.PI * 2 * i / n + Math.random() * .4, dist = 30 + Math.random() * 50;
+    d.animate([{ transform:`translate(${x}px,${y}px) rotate(0)`, opacity:1 }, { transform:`translate(${x + Math.cos(a) * dist}px,${y + Math.sin(a) * dist - 10}px) rotate(200deg) scale(.3)`, opacity:0 }],
+      { duration:650 + Math.random() * 250, easing:'cubic-bezier(.2,.7,.3,1)', fill:'forwards' }).finished.then(() => d.remove());
+  }
+}
+const center = el => { const r = el.getBoundingClientRect(); return { x:r.left + r.width / 2, y:r.top + r.height / 2 }; };
+
+/* ================= pond component (virtualized lily pads) ================= */
+const PAD_SVG = `<svg viewBox="-50 -30 100 60"><ellipse class="leaf" cx="0" cy="6" rx="46" ry="20" fill="#5cc46b" stroke="#3c9a4c" stroke-width="3"/><path d="M0 6 L30 -6 L40 4Z" fill="#2bb3a3"/><path d="M0 6 L-34 0 M0 6 L-20 20 M0 6 L18 20" stroke="#3c9a4c" stroke-width="2" opacity=".6"/>
+  <g class="fl"><path d="M-14 0 C-18 -14 -8 -22 0 -26 C8 -22 18 -14 14 0Z" fill="#ff7aa8"/><path d="M-14 0 C-26 -8 -26 -18 -20 -20 C-12 -18 -6 -10 -2 0Z" fill="#ff9ec2"/><path d="M14 0 C26 -8 26 -18 20 -20 C12 -18 6 -10 2 0Z" fill="#ff9ec2"/><circle cx="0" cy="-6" r="4" fill="#ffd35c"/></g></svg><span class="num"></span>`;
+const SHORE_SVG = `<svg viewBox="-50 -30 100 60"><path d="M-48 26 Q-40 -6 -6 -8 Q30 -12 48 26Z" fill="#e8c98a" stroke="#b38b47" stroke-width="3"/><path d="M8 -8 V-46" stroke="#173a40" stroke-width="3"/><path d="M8 -46 L34 -38 L8 -30Z" fill="#ff6b5e"/></svg><span class="num"></span>`;
+function makePond(box, opt = {}){
+  box.innerHTML = '<div class="wave" style="top:30%"></div><div class="wave" style="top:62%;animation-duration:9s"></div>';
+  const K0 = opt.k || 8;
+  const frog = document.createElement('div'); frog.className = 'frogm';
+  frog.innerHTML = '<svg viewBox="-40 -40 80 64"><use href="#frogMini"/></svg>';
+  box.appendChild(frog);
+  let N = 1, pos = 1, printed = 0, K = K0, pool = [];
+  const st = { lift:0 };
+  function geom(){ const W = box.clientWidth || 400, H = box.clientHeight || 140; const G = W / K; const ps = Math.min(G * .9, H * .62); return { W, H, G, ps }; }
+  function camFor(p){ return Math.max(0, Math.min(p - (K + 1) / 2, N + 1 - K)); }
+  let cam = 0;
+  function ensurePool(){ while (pool.length < K + 3){ const d = document.createElement('div'); d.className = 'pad'; d.innerHTML = PAD_SVG; d.dataset.kind = 'pad'; box.insertBefore(d, frog); pool.push(d); } }
+  function draw(){
+    const { H, G, ps } = geom();
+    const first = Math.max(1, Math.floor(cam) + 1 - 1), last = Math.min(N + 1, Math.ceil(cam + K) + 1);
+    let k = 0;
+    for (let v = first; v <= last && k < pool.length; v++, k++){
+      const d = pool[k], isShore = v === N + 1;
+      if (d.dataset.kind !== (isShore ? 'shore' : 'pad')){ d.innerHTML = isShore ? SHORE_SVG : PAD_SVG; d.dataset.kind = isShore ? 'shore' : 'pad'; d.classList.toggle('shore', isShore); }
+      d.style.display = ''; d.style.width = ps + 'px'; d.style.left = ((v - 1 - cam) * G + G / 2) + 'px';
+      const num = d.querySelector('.num'); num.textContent = isShore ? 'n+1' : v; num.style.fontSize = Math.max(10, Math.min(ps * .26, 22) * (String(v).length > 3 ? .8 : 1)) + 'px';
+      d.classList.toggle('bloom', !isShore && v <= printed && (!opt.only || opt.only(v)));
+      d.classList.toggle('here', Math.round(pos) === v);
+      d.dataset.v = v;
+    }
+    for (; k < pool.length; k++) pool[k].style.display = 'none';
+    const fs = ps * .62, x = (pos - 1 - cam) * G + G / 2 - fs / 2, base = H * .18 + ps * .1;
+    frog.style.width = fs + 'px'; frog.style.height = fs * .8 + 'px';
+    frog.style.transform = `translate(${x}px, ${-(base + st.lift)}px)`;
+    frog.style.bottom = '0'; frog.style.top = 'auto';
+  }
+  function ripple(v){
+    const { H, G, ps } = geom(); const r = document.createElement('div'); r.className = 'ripple';
+    const x = (v - 1 - cam) * G + G / 2; Object.assign(r.style, { left:(x - ps * .5) + 'px', bottom:(H * .14) + 'px', width:ps + 'px', height:ps * .4 + 'px' });
+    box.appendChild(r); r.animate([{ transform:'scale(.6)', opacity:.9 }, { transform:'scale(1.5)', opacity:0 }], { duration:700, easing:'ease-out', fill:'forwards' }).finished.then(() => r.remove());
+  }
+  const api = {
+    set(n){ N = n; K = Math.min(K0, n + 1); pos = 1; printed = 0; cam = camFor(1); st.lift = 0; ensurePool(); draw(); },
+    place(p, pr){ pos = p; printed = pr; cam = camFor(p); st.lift = 0; draw(); },
+    get pos(){ return pos; },
+    bloom(v){ printed = v; draw(); const d = pool.find(e => +e.dataset.v === v && e.style.display !== 'none'); if (d){ const fl = d.querySelector('.fl'); fl && fl.animate([{ transform:'scale(0) rotate(-30deg)' }, { transform:'scale(1.25)', offset:.7 }, { transform:'scale(1)' }], { duration:480, easing:'cubic-bezier(.3,1.4,.5,1)' }); } return d; },
+    hop(dur = 520){
+      return new Promise(res => {
+        const a = pos, b = pos + 1, c0 = cam, c1 = camFor(b), t0 = performance.now(), { ps } = geom();
+        const f = t => { const p = Math.min(1, (t - t0) / dur), e = easeIO(p); pos = a + (b - a) * e; cam = c0 + (c1 - c0) * e; st.lift = Math.sin(Math.PI * p) * ps * .9; draw(); if (p < 1) requestAnimationFrame(f); else { pos = b; st.lift = 0; draw(); ripple(b); squash(frog.firstChild, .9); res(); } };
+        requestAnimationFrame(f);
+      });
+    },
+    /* fast continuous glide for big n: onFrame(currentNumber) */
+    glide(T, onFrame){
+      return new Promise(res => {
+        const t0 = performance.now();
+        const f = t => { const p = Math.min(1, (t - t0) / T), e = p < .1 ? p * p * 5 : p, v = 1 + e * N; pos = v; cam = camFor(v); printed = Math.min(N, Math.floor(v)); st.lift = Math.abs(Math.sin(v * Math.PI)) * geom().ps * .35; draw(); onFrame && onFrame(Math.min(N + 1, Math.floor(v)), p); if (p < 1) requestAnimationFrame(f); else { pos = N + 1; printed = N; cam = camFor(N + 1); st.lift = 0; draw(); res(); } };
+        requestAnimationFrame(f);
+      });
+    },
+    shakeShore(){ const d = pool.find(e => e.dataset.kind === 'shore' && e.style.display !== 'none'); if (d) d.animate([{ transform:'translateX(-50%) rotate(0)' }, { transform:'translateX(-50%) rotate(-6deg)' }, { transform:'translateX(-50%) rotate(5deg)' }, { transform:'translateX(-50%) rotate(0)' }], { duration:500 }); squash(frog.firstChild, 1.2); },
+    redraw(){ draw(); },
+    frogEl(){ return frog; }
+  };
+  return api;
+}
+/* output console that keeps the last lines */
+function makeOut(el, keep = 6){
+  let lines = [], total = 0;
+  function render(anim = true){ el.innerHTML = (total > lines.length ? `<span class="more">${total} سطر</span>` : '') + lines.map((l, i) => `<div class="${anim ? 'l' : ''}${i === lines.length - 1 ? ' new' : ''}">${l}</div>`).join(''); }
+  return {
+    clear(){ lines = []; total = 0; el.innerHTML = ''; },
+    add(v){ total++; lines.push(v); if (lines.length > keep) lines.shift(); render(); },
+    upto(from, to){ for (let v = from; v <= to; v++){ total++; if (to - v < keep) lines.push(v); } lines = lines.slice(-keep); render(false); },
+    get total(){ return total; }
+  };
+}
+function fitKeep(el){ const h = el.clientHeight || 120, lh = parseFloat(getComputedStyle(el).fontSize) * 1.25 || 18; return Math.max(3, Math.floor((h - 8) / lh) - 1); }
+
+/* ================= navigation ================= */
+const screens = [...document.querySelectorAll('.screen')];
+let cur = 0;
+screens.forEach((s, i) => { const b = document.createElement('button'); b.className = 'step-btn'; b.innerHTML = `<i>${i+1}</i><span>${s.dataset.title}</span>`; b.onclick = () => go(i); $('stepper').appendChild(b); });
+function go(i){
+  if (i < 0 || i >= screens.length || i === cur) return;
+  screens[cur].classList.remove('active'); screens[i].classList.add('active');
+  cur = i; syncNav();
+  if (cur !== 0) gStop = true;
+  if (cur !== 2){ stopFlow(); stopBuildAll(); }
+  if (cur !== 3) stopIde();
+  if (cur === 4 && !tShown && !tBusy){ tShown = true; requestAnimationFrame(() => runTest(false)); }
+  requestAnimationFrame(() => { [gP, fP, mP, tP].forEach(p => p.redraw()); });
+}
+function syncNav(){
+  [...$('stepper').children].forEach((b, i) => { b.classList.toggle('active', i === cur); b.classList.toggle('done', i < cur); });
+  $('prev').disabled = cur === 0; $('next').disabled = cur === screens.length - 1;
+  if (cur !== 0) $('next').classList.remove('pulse');
+}
+$('prev').onclick = () => go(cur - 1);
+$('next').onclick = () => go(cur + 1);
+document.addEventListener('keydown', e => {
+  if (e.target.tagName === 'INPUT') return;
+  if (e.key === 'Escape') return closeSheet();
+  if ($('sheetWrap').classList.contains('open')) return;
+  if (e.key === 'ArrowLeft') go(cur + 1);
+  if (e.key === 'ArrowRight') go(cur - 1);
+});
+window.addEventListener('resize', () => [gP, fP, mP, tP].forEach(p => p && p.redraw()));
+syncNav();
+
+/* ================= 1. game ================= */
+const gP = makePond($('gPond'), { k:9 }), gO = makeOut($('gOut'), 5), frogEl = $('frog');
+let gN = 5, gNum = 1, gLaps = 0, gBusy = false, gDone = false, gAutoOn = false, gStop = false;
+const parts = [...document.querySelectorAll('#gParts .lp')];
+const setPart = (k, cls) => parts.forEach((p, i) => { p.classList.remove('on', 'ok', 'no', 'stop'); if (i === k){ p.classList.add('on'); if (cls) p.classList.add(cls); } });
+const setFace = f => { frogEl.classList.remove('happy', 'oops'); if (f) frogEl.classList.add(f); };
+const say = h => { $('frSay').innerHTML = h; retrigger($('frSay'), 'pop'); };
+function renderNChips(){
+  const box = $('nChips'); box.querySelectorAll('.chip').forEach(c => c.remove());
+  [5, 8, 12, 1000].forEach(v => { const b = document.createElement('button'); b.className = 'chip' + (v === gN ? ' active' : ''); b.textContent = v; b.onclick = () => { if (gBusy) return; gN = v; gReset(); }; box.appendChild(b); });
+}
+function gReset(){
+  gStop = true; gAutoOn = false; gNum = 1; gLaps = 0; gDone = false;
+  gP.set(gN); gO.clear(); setPart(-1); setFace(null);
+  $('gNum').textContent = 1; $('gLaps').textContent = 0; $('heroNum').textContent = 1; $('gQ').textContent = `number <= n`;
+  $('gStep').disabled = false; $('gAuto').disabled = false; $('gAuto').querySelector('span').textContent = 'خليها تنط لوحدها';
+  renderNChips();
+  say(gN >= 1000 ? `n = <b>${gN}</b>!<br>هتدوس ${gN} مرة؟ ولا نخليها <b>تنط لوحدها</b>؟` : `هنعدّ من <b>1</b> لحد <b>${gN}</b>.<br>دوس <b>نطّة</b> وكرر معايا!`);
+}
+function heroHop(){ $('frogBody').animate([{ transform:'translateY(0) scale(1,1)' }, { transform:'translateY(4px) scale(1.06,.92)', offset:.2 }, { transform:'translateY(-22px) scale(.95,1.06)', offset:.55 }, { transform:'translateY(2px) scale(1.05,.95)', offset:.85 }, { transform:'none' }], { duration:520, easing:'ease-out' }); }
+async function gIter(speed = 1){
+  if (gBusy || gDone) return; gBusy = true;
+  const t = ms => wait(ms * speed);
+  $('gStep').disabled = true;
+  setPart(0); $('gQ').textContent = `${gNum} <= ${gN}`; SND.tick(); await t(380);
+  if (gNum <= gN){
+    parts[0].classList.add('ok'); await t(160);
+    setPart(1); const d = gP.bloom(gNum); gO.add(gNum); $('heroNum').textContent = gNum; SND.bloom(gNum - 1);
+    if (d && speed > .5){ const c = center(d); burst(c.x, c.y - 10, 8); }
+    await t(400);
+    setPart(2); gLaps++; $('gLaps').textContent = gLaps; SND.hop(); heroHop();
+    await gP.hop(520 * speed); SND.plop();
+    gNum++; $('gNum').textContent = gNum;
+    if (gLaps === 1 && !gAutoOn) say('شفت؟ لفّة واحدة فيها <b>3 خطوات</b>:<br>نسأل، نطبع، ننط');
+    if (gLaps === 3 && !gAutoOn) say('نفس الـ 3 خطوات بتتكرر…<br>ده بالظبط اسمه <b>Loop</b>');
+  } else {
+    parts[0].classList.add('no'); parts[0].classList.add('stop'); $('gQ').textContent = `${gNum} <= ${gN}`;
+    SND.no(); gP.shakeShore(); await t(300);
+    gDone = true; setFace('happy'); SND.ribbit(); setTimeout(SND.win, 300);
+    say(`وصلنا الشط! <b>number = ${gNum}</b> بقى أكبر من n،<br>فالسؤال جوابه <span class="lt">لأ</span> والـ Loop <b>وقف</b>`);
+    $('gAuto').disabled = true; $('next').classList.add('pulse');
+  }
+  $('gStep').disabled = gDone;
+  gBusy = false;
+}
+async function gAuto(){
+  if (gAutoOn){ gStop = true; gAutoOn = false; $('gAuto').querySelector('span').textContent = 'خليها تنط لوحدها'; return; }
+  if (gDone || gBusy) return;
+  gAutoOn = true; gStop = false; $('gAuto').querySelector('span').textContent = 'إيقاف';
+  if (gN - gNum > 30){
+    $('gStep').disabled = true; $('gAuto').disabled = true;
+    say(`<b>${gN - gNum + 1}</b> نطّة… الكمبيوتر بيعملها في لمح البصر!`);
+    setPart(0); SND.rush(2.6);
+    const start = gNum; let last = gNum - 1, lastTick = 0;
+    await gP.glide(2600, (v, p) => {
+      const pr = Math.min(gN, v); if (pr > last){ gO.upto(last + 1, pr); last = pr; }
+      gNum = Math.min(gN + 1, v + 1); $('gNum').textContent = Math.min(gN, v); $('gLaps').textContent = Math.min(gN, v) - start + 1 + gLaps; $('heroNum').textContent = Math.min(gN, v);
+      setPart(Math.floor(p * 60) % 3);
+      const tt = performance.now(); if (tt - lastTick > 70){ lastTick = tt; SND.tick(); }
+    });
+    gLaps = gN; gNum = gN + 1; $('gNum').textContent = gNum; $('gLaps').textContent = gLaps;
+    gAutoOn = false; await gIter(1);
+    return;
+  }
+  while (gAutoOn && !gStop && !gDone){ await gIter(.6); await wait(80); }
+  gAutoOn = false; $('gAuto').querySelector('span').textContent = 'خليها تنط لوحدها';
+}
+$('gStep').onclick = () => { gStop = true; gAutoOn = false; gIter(1); };
+$('gAuto').onclick = gAuto;
+$('gReset').onclick = () => { if (gBusy) return; gReset(); };
+requestAnimationFrame(gReset);
+
+/* ================= 2. analysis ================= */
+const anCards = [...document.querySelectorAll('.an')];
+const AN_SAY = [
+  'قبل الكود، لازم نفهم المسألة. دوس "اكشف"',
+  'بنقرا رقم واحد اسمه <b>n</b>',
+  'نطبع كل الأرقام من 1 لحد n، كل رقم في سطر',
+  'لو n كبير، مستحيل نكتب print لكل رقم بإيدنا',
+  'الحل: نكتب الخطوة <b>مرة واحدة</b>، ونخلي الكمبيوتر يكررها: ده الـ <b>Loop</b>'
+];
+let an = 0;
+function renderAn(){
+  anCards.forEach((c, i) => { c.classList.toggle('locked', i >= an); c.classList.toggle('fresh', i === an - 1); });
+  $('anSay').innerHTML = AN_SAY[an];
+  $('anNextTxt').innerHTML = an >= 4 ? 'يلا للتصميم' : `اكشف <span class="ltr">(${an}/4)</span>`;
+}
+$('anNext').onclick = () => { if (an >= 4) return go(2); an++; SND.plop(); renderAn(); };
+$('anReset').onclick = () => { an = 0; renderAn(); };
+renderAn();
+
+/* ================= 3. design ================= */
+const BUILD = [
+  { els:['n-start'], say:'كل برنامج ليه بداية' },
+  { els:['e-1','n-in'], say:'نقرا n' },
+  { els:['e-2','n-p0'], say:'العدّاد <b>number</b> يبدأ من 1: الضفدعة على أول ورقة' },
+  { els:['e-3','n-d'], say:'السؤال اللي بيتكرر: لسه number ≤ n؟' },
+  { els:['e-y','n-out'], say:'لو أيوه: نطبع الرقم' },
+  { els:['e-4','n-inc','e-back'], say:'نزوّد 1 ونرجع للسؤال تاني: ده <b>السهم اللي بيلف</b>' },
+  { els:['e-n','n-end'], say:'لو لأ: نخرج من الـ Loop وننتهي. دوس "تشغيل"' }
+];
+const NODE_LINE = { 'n-start':0, 'n-in':1, 'n-p0':2, 'n-d':3, 'n-out':4, 'n-inc':5, 'n-end':6 };
+const pLines = [...document.querySelectorAll('#pseudo li')];
+let built = 0, buildAllTimer = null;
+function buildStep(){
+  if (built >= BUILD.length) return;
+  document.querySelectorAll('#flow .fresh, #pseudo .fresh').forEach(el => el.classList.remove('fresh'));
+  const step = BUILD[built];
+  pLines[built].classList.add('show', 'fresh');
+  step.els.forEach((id, k) => setTimeout(() => { $(id).classList.add('show'); if (id.startsWith('n-')) $(id).classList.add('fresh'); }, k * 180));
+  SND.plop(); $('dsSay').innerHTML = step.say;
+  built++; syncBuild();
+}
+function syncBuild(){
+  $('buildBar').style.width = (built / BUILD.length * 100) + '%';
+  const fin = built >= BUILD.length;
+  $('bNext').disabled = fin; $('bAll').disabled = fin;
+  $('bNextTxt').innerHTML = `ابني <span class="ltr">(${built}/${BUILD.length})</span>`;
+  $('trace').classList.toggle('locked', !fin);
+  if (fin) setTimeout(() => document.querySelectorAll('#flow .fresh').forEach(el => el.classList.remove('fresh')), 1000);
+}
+function stopBuildAll(){ clearInterval(buildAllTimer); buildAllTimer = null; }
+function resetBuild(){
+  stopBuildAll(); stopFlow(); resetTrace(); built = 0;
+  pLines.forEach(li => li.classList.remove('show','fresh','cur'));
+  document.querySelectorAll('#flow .node,#flow .edge').forEach(el => el.classList.remove('show','fresh'));
+  $('dsSay').innerHTML = 'يلا نبني الحل سوا. دوس "ابني"'; syncBuild();
+}
+$('bNext').onclick = () => { stopBuildAll(); buildStep(); };
+$('bAll').onclick = () => { if (buildAllTimer) return; buildStep(); buildAllTimer = setInterval(() => { if (built >= BUILD.length) return stopBuildAll(); buildStep(); }, 750); };
+$('bReset').onclick = resetBuild;
+
+const fP = makePond($('fPond'), { k:5 }), fO = makeOut($('fOut'), 4);
+let flowN = 3, flowTimer = null, flowGen = 0;
+function resetTrace(){
+  flowGen++;
+  document.querySelectorAll('#flow .on,#flow .visited').forEach(el => el.classList.remove('on','visited'));
+  pLines.forEach(li => li.classList.remove('cur'));
+  fP.set(flowN); fO.clear();
+  $('fCmp').textContent = '—';
+}
+function stopFlow(){ clearTimeout(flowTimer); flowTimer = null; $('flowRun').disabled = false; }
+function runFlow(){
+  stopFlow(); resetTrace();
+  const n = flowN, my = flowGen;
+  const q = [{ n:'n-start' }, { e:'e-1' }, { n:'n-in', fx:() => { $('fCmp').innerHTML = `<span class="d">n = ${n}</span>`; SND.move(.4); } }, { e:'e-2' },
+    { n:'n-p0', fx:() => { $('fCmp').innerHTML = '<span class="d">number = 1</span>'; SND.snap(); } }, { e:'e-3' }];
+  for (let v = 1; v <= n; v++){
+    q.push({ n:'n-d', fx:() => { $('fCmp').innerHTML = `<span>${v} &lt;= ${n}</span><span class="t">True</span>`; SND.tick(); } }, { e:'e-y' },
+      { n:'n-out', fx:() => { fP.bloom(v); fO.add(v); SND.bloom(v - 1); } }, { e:'e-4' },
+      { n:'n-inc', slow:true, fx:() => { $('fCmp').innerHTML = `<span class="d">number = ${v} + 1 = ${v + 1}</span>`; SND.hop(); fP.hop(450).then(() => my === flowGen && SND.plop()); } }, { e:'e-back' });
+  }
+  q.push({ n:'n-d', slow:true, fx:() => { $('fCmp').innerHTML = `<span>${n + 1} &lt;= ${n}</span><span class="f">False</span>`; SND.no(); fP.shakeShore(); } }, { e:'e-n' }, { n:'n-end', fx:() => SND.win() });
+  let k = 0;
+  $('flowRun').disabled = true;
+  $('dsSay').innerHTML = `بنمشي على الفلوتشارت و <span class="ltr">n = ${n}</span>. تابع السهم اللي بيلف`;
+  const tick = () => {
+    if (k >= q.length){ flowTimer = null; $('flowRun').disabled = false; $('dsSay').innerHTML = `لفّينا <b>${n}</b> مرة، وفي المرة رقم <b>${n + 1}</b> الشرط بقى False`; return; }
+    const s = q[k++];
+    document.querySelectorAll('#flow .on').forEach(el => el.classList.remove('on'));
+    $(s.n || s.e).classList.add('on', 'visited');
+    if (s.n){ pLines.forEach(li => li.classList.remove('cur')); pLines[NODE_LINE[s.n]].classList.add('cur'); }
+    if (s.fx) s.fx();
+    flowTimer = setTimeout(tick, s.e ? 200 : s.slow ? 750 : 520);
+  };
+  tick();
+}
+$('flowRun').onclick = runFlow;
+function renderFlowChips(){
+  const box = $('flowChips'); box.innerHTML = '';
+  [3, 5, 1].forEach(v => { const b = document.createElement('button'); b.className = 'chip' + (v === flowN ? ' active' : ''); b.textContent = 'n = ' + v; b.onclick = () => { flowN = v; stopFlow(); resetTrace(); renderFlowChips(); }; box.appendChild(b); });
+}
+renderFlowChips(); resetBuild();
+
+/* ================= 4. IDE ================= */
+const NV = '<span class="vn">n</span>', NM = '<span class="vm">number</span>';
+const CODE = [
+  `${NV} = <span class="sf">int</span>(<span class="sf">input</span>())`,
+  `${NM} = <span class="sn">1</span>`,
+  `<span class="sk">while</span> ${NM} <= ${NV}:`,
+  `    <span class="sf">print</span>(${NM})`,
+  `    ${NM} = ${NM} + <span class="sn">1</span>`
+];
+const SHORT = [
+  `${NV} = <span class="sf">int</span>(<span class="sf">input</span>())`,
+  `<span class="sk">for</span> ${NM} <span class="sk">in</span> <span class="sf">range</span>(<span class="sn">1</span>, ${NV} + <span class="sn">1</span>):`,
+  `    <span class="sf">print</span>(${NM})`
+];
+const codeHTML = (lines, body = []) => lines.map((l, i) => `<div class="ln${body.includes(i) ? ' body' : ''}"><span class="no">${i+1}</span><span>${l || ' '}</span></div>`).join('');
+$('code').innerHTML = codeHTML(CODE, [3, 4]);
+const lnEls = [...$('code').querySelectorAll('.ln')];
+const mP = makePond($('mPond'), { k:6 });
+let mO = null;
+
+let ideN = 3, IB = null, idePos = -1, ideTimer = null, ideBusy = false;
+function ideBuild(n){
+  const L = [{ line:0, kind:'read', say:`بنقرا n من الكيبورد: <b>${n}</b>` }, { line:1, kind:'init', say:'العدّاد number يبدأ من <b>1</b>' }];
+  for (let v = 1; v <= n; v++){
+    L.push({ line:2, kind:'check', v, ok:true, say:`لفّة ${v}: هل <span class="ltr">${v} <= ${n}</span>؟ <b>أيوه</b>، ندخل جوه الـ Loop` });
+    L.push({ line:3, kind:'print', v, say:`بنطبع <b>${v}</b>` });
+    L.push({ line:4, kind:'inc', v, say:`number بقى <span class="ltr">${v} + 1 = ${v + 1}</span>، ونرجع لسطر while` });
+  }
+  L.push({ line:2, kind:'check', v:n + 1, ok:false, say:`هل <span class="ltr">${n + 1} <= ${n}</span>؟ <b>لأ</b>! نخرج من الـ Loop والبرنامج يخلص` });
+  return { S:L, n };
+}
+function stateAt(k){
+  const m = { n:null, num:null, laps:0, hl:[], calc:null, printed:0, done:[] };
+  for (let i = 0; i <= k; i++){
+    const s = IB.S[i]; m.hl = []; m.calc = null; if (!m.done.includes(s.line)) m.done.push(s.line);
+    if (s.kind === 'read'){ m.n = IB.n; m.hl = ['n']; }
+    if (s.kind === 'init'){ m.num = 1; m.hl = ['number']; }
+    if (s.kind === 'check'){ m.hl = ['number', 'n']; m.calc = `<span>${s.v} &lt;= ${IB.n}</span><span class="${s.ok ? 't' : 'f'}">${s.ok ? 'True' : 'False'}</span>`; }
+    if (s.kind === 'print'){ m.printed = s.v; m.hl = ['number']; }
+    if (s.kind === 'inc'){ m.num = s.v + 1; m.laps = s.v; m.hl = ['number']; m.calc = `<span class="d">number = ${s.v} + 1 = ${s.v + 1}</span>`; }
+  }
+  return m;
+}
+function mb(name, v, hl, cls = ''){ return `<div class="mbox ${cls}${v == null ? ' empty' : ''}${hl.includes(name) ? ' cur' : ''}" data-v="${name}"><span class="nm">${name}${cls === 'l' ? '' : '<span class="tag">int</span>'}</span><b>${v == null ? '—' : v}</b></div>`; }
+function renderIde(memK = idePos, landed = true, pond = true){
+  const m = stateAt(memK), st = IB.S[idePos], hl = landed ? m.hl : [];
+  const fin = idePos >= IB.S.length - 1;
+  lnEls.forEach((el, i) => { el.classList.toggle('cur', !!st && st.line === i); el.classList.toggle('ran', m.done.includes(i)); });
+  $('memRow').innerHTML = mb('n', m.n, hl) + mb('number', m.num, hl, 'c') + mb('لفات', m.laps, [], 'l');
+  if (pond){ mP.place(m.num == null ? 1 : Math.min(m.num, IB.n + 1), m.printed); }
+  $('calcLane').innerHTML = landed && m.calc ? m.calc : '<span class="ph2">هنا هتشوف الشرط كل لفّة</span>';
+  $('ideSay').innerHTML = st ? st.say : 'دوس "خطوة" وتابع الكود. خلي بالك من السطر 3 بيتكرر';
+  $('ideStep').disabled = ideBusy || fin;
+}
+const boxB = n => document.querySelector(`.mem .mbox[data-v="${n}"] b`);
+function flyToken(text, from, to, dur, cls = ''){
+  const t = document.createElement('div'); t.className = 'token ' + cls; t.textContent = text; document.body.appendChild(t);
+  const w = t.offsetWidth, h = t.offsetHeight;
+  const fr = arcFrames(from.x - w / 2, from.y - h / 2, to.x - w / 2, to.y - h / 2, 50, 0, 1.12);
+  fr.forEach((k, i) => k.opacity = Math.min(1, i / 4));
+  return t.animate(fr, { duration:dur, easing:'linear', fill:'forwards' }).finished.then(() => t.remove());
+}
+async function animateStep(k){
+  const s = IB.S[k];
+  if (s.kind === 'read'){ const lr = lnEls[0].getBoundingClientRect(); SND.move(.7); await flyToken(String(IB.n), { x:lr.left + lr.width * .5, y:lr.top + lr.height / 2 }, center(boxB('n')), 700); }
+  else if (s.kind === 'init'){ const lr = lnEls[1].getBoundingClientRect(); SND.move(.5); await flyToken('1', { x:lr.left + lr.width * .4, y:lr.top + lr.height / 2 }, center(boxB('number')), 600, 'g'); }
+  else if (s.kind === 'check'){ ['number','n'].forEach(n => boxB(n).parentElement.classList.add('cur')); SND.tick(); await wait(350); (s.ok ? SND.yes : SND.no)(); if (!s.ok) mP.shakeShore(); await wait(250); }
+  else if (s.kind === 'print'){ SND.move(.5); await flyToken(String(s.v), center(boxB('number')), center($('conOut')), 600, 'p'); mP.bloom(s.v); mO.add(s.v); SND.bloom(s.v - 1); }
+  else if (s.kind === 'inc'){ await flyToken('+1', center($('calcLane')), center(boxB('number')), 500, 'g'); SND.hop(); await mP.hop(480); SND.plop(); }
+}
+async function ideNext(){
+  if (ideBusy) return;
+  if (idePos >= IB.S.length - 1){ stopIde(); return; }
+  idePos++; ideBusy = true;
+  renderIde(idePos - 1, false, false);
+  await animateStep(idePos);
+  ideBusy = false;
+  renderIde(idePos, true, false);
+  const st = IB.S[idePos];
+  if (st.kind === 'read' || st.kind === 'init' || st.kind === 'inc'){ const b = boxB(st.kind === 'read' ? 'n' : 'number'); squash(b); const c = center(b); burst(c.x, c.y - 6, 7); if (st.kind !== 'inc') SND.snap(); }
+  if (idePos >= IB.S.length - 1){ stopIde(); setTimeout(SND.win, 300); }
+}
+function resetIde(){ IB = ideBuild(ideN); idePos = -1; ideBusy = false; mP.set(ideN); mO = makeOut($('conOut'), fitKeep($('conOut'))); mO.clear(); renderIde(); }
+function stopIde(){ clearInterval(ideTimer); ideTimer = null; $('ideRun').querySelector('span').textContent = 'تشغيل تلقائي'; }
+$('ideStep').onclick = () => { stopIde(); ideNext(); };
+$('ideReset').onclick = () => { if (ideBusy) return; stopIde(); resetIde(); };
+$('ideRun').onclick = () => {
+  if (ideTimer) return stopIde();
+  if (ideBusy) return;
+  if (idePos >= IB.S.length - 1) resetIde();
+  $('ideRun').querySelector('span').textContent = 'إيقاف';
+  ideNext(); ideTimer = setInterval(ideNext, 1500);
+};
+function renderIdeChips(){
+  const box = $('ideChips'); box.querySelectorAll('.chip').forEach(c => c.remove());
+  [3, 5, 1].forEach(v => { const b = document.createElement('button'); b.className = 'chip' + (v === ideN ? ' active' : ''); b.textContent = v; b.onclick = () => { if (ideBusy) return; ideN = v; stopIde(); resetIde(); renderIdeChips(); }; box.appendChild(b); });
+}
+renderIdeChips(); resetIde();
+
+/* ================= 5. test ================= */
+let tBusy = false;
+const tP = makePond($('tPond'), { k:9 });
+let tO = makeOut($('tOut'), 8);
+function prepTest(n){
+  tP.set(n); tO = makeOut($('tOut'), fitKeep($('tOut'))); tO.clear();
+  $('tSteps').innerHTML = [
+    ['العدّاد بيبدأ من', '1'],
+    ['عدد اللفات (أسطر المخرج)', String(n)],
+    ['الـ Loop وقف لما number بقى', `${n + 1} > ${n}`]
+  ].map(([k, v], i) => `<div class="tstep" id="ts${i}"><span class="n">${i+1}</span><span>${k}</span><span class="r" id="tr${i}" data-v="${v}"></span></div>`).join('');
+}
+const showStep = async (i, f) => { const row = $('ts' + i); row.classList.add('on'); SND.tick(); if (f) await f(); $('tr' + i).textContent = $('tr' + i).dataset.v; await wait(250); row.classList.remove('on'); row.classList.add('done'); };
+async function runTest(animate = true){
+  if (tBusy) return;
+  const r = parseN($('tIn').value);
+  if (r.err){ $('tErr').textContent = r.err; retrigger($('tIn'), 'shake'); return; }
+  $('tErr').textContent = '';
+  const n = r.n; $('tIn').value = n; renderTChips(n);
+  prepTest(n);
+  if (!animate){ tP.place(n + 1, n); tO.upto(1, n); [0,1,2].forEach(i => { $('tr' + i).textContent = $('tr' + i).dataset.v; $('ts' + i).classList.add('done'); }); return; }
+  tBusy = true; ['tRun','tRand'].forEach(id => $(id).disabled = true);
+  await showStep(0, () => wait(300));
+  await showStep(1, async () => {
+    if (n <= 12){
+      for (let v = 1; v <= n; v++){ tP.bloom(v); tO.add(v); SND.bloom(v - 1); await wait(170); SND.hop(); await tP.hop(330); SND.plop(); }
+    } else {
+      SND.rush(Math.min(3.2, 1.2 + n / 400)); let last = 0, lt = 0;
+      await tP.glide(Math.min(3200, 1200 + n * 2.5), v => { const pr = Math.min(n, v); if (pr > last){ tO.upto(last + 1, pr); last = pr; } const tt = performance.now(); if (tt - lt > 80){ lt = tt; SND.tick(); } });
+    }
+  });
+  await showStep(2, async () => { SND.no(); tP.shakeShore(); await wait(400); });
+  SND.win();
+  ['tRun','tRand'].forEach(id => $(id).disabled = false); tBusy = false;
+}
+function renderTChips(active){
+  const box = $('tChips'); box.innerHTML = '';
+  [1, 7, 12, 100, 1000].forEach(v => { const b = document.createElement('button'); b.className = 'chip' + (v === active ? ' active' : ''); b.textContent = v; b.onclick = () => { if (tBusy) return; $('tIn').value = v; runTest(true); }; box.appendChild(b); });
+}
+$('tRun').onclick = () => runTest(true);
+$('tIn').addEventListener('keydown', e => { if (e.key === 'Enter') runTest(true); });
+$('tRand').onclick = () => { if (tBusy) return; $('tIn').value = Math.random() < .5 ? 2 + Math.floor(Math.random() * 11) : 20 + Math.floor(Math.random() * 3000); runTest(true); };
+renderTChips(7);
+let tShown = false;
+
+/* ================= 6. improve ================= */
+function drawRange(){
+  const g = document.getElementById('rangeArt'); const n = 5, x = v => 40 + (v - 1) * 88;
+  let h = '';
+  for (let v = 1; v <= n + 1; v++){
+    const last = v === n + 1;
+    h += `<circle cx="${x(v)}" cy="70" r="20" fill="${last ? '#fff' : '#5cc46b'}" stroke="${last ? '#ff6b5e' : '#3c9a4c'}" stroke-width="3" ${last ? 'stroke-dasharray="5 4"' : ''}/>`;
+    h += `<text x="${x(v)}" y="71" text-anchor="middle" dominant-baseline="central" font-size="18" fill="${last ? '#ff6b5e' : '#fff'}">${last ? 'n+1' : v}</text>`;
+  }
+  h += `<path d="M${x(1) - 20} 34 V24 H${x(n) + 20} V34" fill="none" stroke="#157a83" stroke-width="3"/><text x="${(x(1) + x(n)) / 2}" y="14" text-anchor="middle" font-size="17" fill="#157a83">range(1, n + 1)  →  1 … n</text>`;
+  h += `<text x="${x(n + 1)}" y="114" text-anchor="middle" font-size="15" fill="#ff6b5e">stop</text>`;
+  g.innerHTML = h;
+}
+function showVersion(v){
+  [...$('seg').children].forEach(b => b.classList.toggle('on', +b.dataset.v === v));
+  $('impCode').innerHTML = v ? codeHTML(SHORT, [2]) : codeHTML(CODE, [3, 4]);
+  $('impTab').textContent = v ? 'one_to_n_for.py' : 'one_to_n.py';
+}
+[...$('seg').children].forEach(b => b.onclick = () => showVersion(+b.dataset.v));
+showVersion(0); drawRange();
+$('nextBtn').onclick = () => openSheet('next');
+
+/* ================= hints ================= */
+const SHEETS = {
+  le: {
+    label:'ليه <= مش <؟', title:'علشان n نفسه يتطبع',
+    icon:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"><path d="M18 5L6 11l12 6M6 20h12"/></svg>',
+    html:`<p>لو كتبنا <span class="ltr">number &lt; n</span>، لما number يوصل لـ n السؤال هيقول لأ، وآخر رقم مش هيتطبع.</p>
+      <pre class="snip">n = 3
+while number &lt; n:    # 1 2      ناقص 3
+while number &lt;= n:   # 1 2 3    صح</pre>`
+  },
+  inf: {
+    label:'نسيت تزوّد؟', title:'Loop مالهاش نهاية',
+    icon:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M18.2 8.6a4 4 0 1 1 0 6.8L12 12l-6.2-3.4a4 4 0 1 0 0 6.8L12 12"/></svg>',
+    html:`<p>لو شلنا سطر <span class="ltr">number = number + 1</span>، الضفدعة هتفضل واقفة على الورقة 1 للأبد، والسؤال دايماً جوابه أيوه.</p>
+      <pre class="snip">1
+1
+1
+…   # مش هيخلص أبداً</pre><p>دايماً اتأكد إن العدّاد بيتحرك ناحية النهاية.</p>`
+  },
+  line: {
+    label:'كل رقم في سطر', title:'print بتنزل سطر جديد',
+    icon:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M4 6h16M4 12h10M4 18h6"/></svg>',
+    html:`<p>كل <span class="ltr">print</span> بتطبع وتنزل سطر جديد لوحدها، علشان كده كل رقم بيطلع في سطر.</p>
+      <pre class="snip">print(1)
+print(2)
+# 1
+# 2</pre>`
+  },
+  range: {
+    label:'range(1, n+1)', title:'range بتقف قبل الآخر',
+    icon:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M3 12h18M7 8v8M17 8v8"/></svg>',
+    html:`<p><span class="ltr">range(a, b)</span> بتبدأ من a وبتقف <b>قبل</b> b.</p>
+      <pre class="snip">list(range(1, 5))   # [1, 2, 3, 4]
+list(range(1, 6))   # [1, 2, 3, 4, 5]</pre><p>علشان n يدخل، بنكتب <span class="ltr">n + 1</span>.</p>`
+  }
+};
+const NEXT = {
+  title:'المسألة الجاية: Even Numbers',
+  html:`<div class="nx">
+    <div class="g">نفس البركة… بس نطبع <b>الأرقام الزوجية</b> بس</div>
+    <div class="pbox"><div class="pond" id="nxPond"></div></div>
+    <div class="tip"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M9 18h6M10 22h4M12 2a7 7 0 0 0-4 12.7V17h8v-2.3A7 7 0 0 0 12 2z"/></svg>تقدر تخلّي الضفدعة تنط <b>ورقتين</b> مرة واحدة؟ تبدأ منين؟</div>
+    <div class="try">اقرأ المسألة وجرّب بنفسك الأول · <a href="https://codeforces.com/group/MWSDmqGsZm/contest/219432/problem/B" target="_blank" rel="noopener">افتح Even Numbers</a></div>
+  </div>`
+};
+Object.entries(SHEETS).forEach(([k, s]) => { const b = document.createElement('button'); b.className = 'hint-btn'; b.innerHTML = `${s.icon}<span class="ltr" style="font-family:inherit">${s.label}</span>`; if (!/[a-z(]/.test(s.label)) b.querySelector('span').className = ''; b.onclick = () => openSheet(k); $('hints').appendChild(b); });
+async function nextDemo(){
+  const box = $('nxPond'); if (!box) return;
+  const P = makePond(box, { k:9, only:v => v % 2 === 0 }); P.set(8);
+  for (let v = 1; v <= 8; v++){
+    if (!$('sheetWrap').classList.contains('open') || !box.isConnected) return;
+    if (v % 2 === 0){ P.bloom(v); SND.bloom(v); await wait(250); } else P.redraw();
+    if (v < 8){ await P.hop(v % 2 ? 380 : 380); }
+  }
+}
+function openSheet(k){
+  const d = k === 'next' ? NEXT : SHEETS[k];
+  document.querySelector('.sheet').className = 'sheet' + (k === 'next' ? ' big' : '');
+  $('sheetTitle').textContent = d.title; $('sheetBody').innerHTML = d.html; $('sheetWrap').classList.add('open');
+  if (k === 'next') setTimeout(nextDemo, 500);
+}
+function closeSheet(){ $('sheetWrap').classList.remove('open'); }
+$('sheetClose').onclick = closeSheet;
+$('sheetWrap').onclick = e => { if (e.target.id === 'sheetWrap') closeSheet(); };
+
+</script>
+</body>
+</html>
